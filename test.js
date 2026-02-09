@@ -572,6 +572,26 @@ function corregirTest() {
   // CAMBIO 3: limpieza visual para evitar radios fantasma
   zonaTest.innerHTML = "";
 
+  // Reconstruir tema de falladas después de corregir
+  asegurarTemaFalladas();
+  banco["__falladas__"] = [];
+
+  Object.keys(banco).forEach(tema => {
+    if (tema === "__falladas__") return;
+
+    banco[tema].forEach(p => {
+      const fallos = p.fallada || p.fallos || 0;
+      if (fallos > 0) {
+        banco["__falladas__"].push(p);
+      }
+    });
+  });
+
+  // Actualizar contadores visibles
+  if (typeof pintarCheckboxesTemas === "function") {
+    pintarCheckboxesTemas();
+  }
+
   mostrarResumen();
 }
 

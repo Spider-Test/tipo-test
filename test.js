@@ -55,9 +55,61 @@ let preguntasEnBlanco = [];
 
 
 document.addEventListener("DOMContentLoaded", async () => {
-  if (window.cargarDesdeFirebase) {
-    banco = await window.cargarDesdeFirebase();
-    console.log("Banco cargado desde Firebase (test)");
+  if (window.db && window.collection && window.onSnapshot) {
+    const colRef = window.collection(window.db, "preguntas");
+
+    window.onSnapshot(colRef, async (snapshot) => {
+      const nuevoBanco = {};
+
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        const id = docSnap.id;
+
+        if (!nuevoBanco[data.tema]) nuevoBanco[data.tema] = [];
+
+        nuevoBanco[data.tema].push({
+          id: id,
+          pregunta: data.pregunta,
+          opciones: data.opciones,
+          correcta: data.correcta,
+          feedback: data.feedback || "",
+          fallada: 0
+        });
+      });
+
+      banco = nuevoBanco;
+      console.log("Banco actualizado en tiempo real");
+
+      // Recargar estadísticas del usuario tras actualizar el banco
+      if (window.cargarEstadisticasUsuario) {
+        const estadisticas = await window.cargarEstadisticasUsuario();
+        Object.keys(banco).forEach(tema => {
+          if (tema === "__falladas__") return;
+          banco[tema].forEach(p => {
+            if (estadisticas && estadisticas[p.id]) {
+              p.fallada = estadisticas[p.id];
+            } else {
+              p.fallada = 0;
+            }
+          });
+        });
+      }
+
+      // Reconstruir falladas y repintar temas si no hay test activo
+      banco["__falladas__"] = [];
+      Object.keys(banco).forEach(tema => {
+        if (tema === "__falladas__") return;
+        banco[tema].forEach(p => {
+          if ((p.fallada || 0) > 0) {
+            banco["__falladas__"].push(p);
+          }
+        });
+      });
+
+      if (typeof pintarCheckboxesTemas === "function") {
+        pintarCheckboxesTemas();
+      }
+    });
   } else {
     banco = cargarBancoLocal();
   }

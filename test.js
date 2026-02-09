@@ -55,152 +55,20 @@ let preguntasEnBlanco = [];
 
 
 document.addEventListener("DOMContentLoaded", async () => {
-  if (window.db && window.collection && window.onSnapshot) {
-    const colRef = window.collection(window.db, "preguntas");
-
-    window.onSnapshot(colRef, async (snapshot) => {
-      const nuevoBanco = {};
-
-      snapshot.forEach(docSnap => {
-        const data = docSnap.data();
-        const id = docSnap.id;
-
-        if (!nuevoBanco[data.tema]) nuevoBanco[data.tema] = [];
-
-        nuevoBanco[data.tema].push({
-          id: id,
-          pregunta: data.pregunta,
-          opciones: data.opciones,
-          correcta: data.correcta,
-          feedback: data.feedback || "",
-          fallada: 0
-        });
-      });
-
-      banco = nuevoBanco;
-      console.log("Banco actualizado en tiempo real");
-
-      // Recargar estadísticas del usuario tras actualizar el banco
-      if (window.cargarEstadisticasUsuario) {
-        const estadisticas = await window.cargarEstadisticasUsuario();
-        Object.keys(banco).forEach(tema => {
-          if (tema === "__falladas__") return;
-          banco[tema].forEach(p => {
-            if (estadisticas && estadisticas[p.id]) {
-              p.fallada = estadisticas[p.id];
-            } else {
-              p.fallada = 0;
-            }
-          });
-        });
-      }
-
-      // Reconstruir falladas y repintar temas si no hay test activo
-      banco["__falladas__"] = [];
-      Object.keys(banco).forEach(tema => {
-        if (tema === "__falladas__") return;
-        banco[tema].forEach(p => {
-          if ((p.fallada || 0) > 0) {
-            banco["__falladas__"].push(p);
-          }
-        });
-      });
-
-      // Actualizar temas y contadores
-      if (typeof cargarTemas === "function") {
-        cargarTemas();
-      }
-
-      // Si no hay test en curso, reconstruir pantalla inicial y contadores
-      const zonaTest = document.getElementById("zonaTest");
-      const resumen = document.getElementById("resumenTest");
-
-      const testVisible = zonaTest && zonaTest.style.display === "block";
-      const resumenVisible = resumen && resumen.style.display === "block";
-
-      // Solo reconstruir si estamos en la pantalla de selección
-      if (!testVisible && !resumenVisible) {
-        initTest();
-      } else {
-        // Si estamos viendo resumen o test, solo actualizar contadores
-        if (typeof pintarCheckboxesTemas === "function") {
-          pintarCheckboxesTemas();
-        }
-      }
-    });
+  if (window.cargarDesdeFirebase) {
+    banco = await window.cargarDesdeFirebase();
+    console.log("Banco cargado desde Firebase (test)");
   } else {
     banco = cargarBancoLocal();
   }
-
-  if (window.cargarEstadisticasUsuario) {
-    const estadisticas = await window.cargarEstadisticasUsuario();
-    console.log("Estadísticas cargadas:", estadisticas);
-
-    Object.keys(banco).forEach(tema => {
-      if (tema === "__falladas__") return;
-      banco[tema].forEach(p => {
-        if (!p.id) return;
-
-        // Si existe la pregunta en las estadísticas del usuario, tiene fallos
-        if (estadisticas && estadisticas[p.id]) {
-          p.fallada = estadisticas[p.id];
-        } else {
-          p.fallada = 0;
-        }
-      });
-    });
-  }
-
-  // Reconstruir el tema de falladas tras cargar estadísticas del usuario
-  banco["__falladas__"] = [];
-  Object.keys(banco).forEach(tema => {
-    if (tema === "__falladas__") return;
-    banco[tema].forEach(p => {
-      if ((p.fallada || 0) > 0) {
-        banco["__falladas__"].push(p);
-      }
-    });
-  });
-
   initTest();
 });
 
 // 🔄 Sincronización directa con el editor (misma página)
 window.addEventListener("message", (e) => {
-  console.log("[TEST] Mensaje recibido:", e.data);
-
   if (e.data && e.data.type === "BANCO_ACTUALIZADO") {
-    console.log("[TEST] BANCO_ACTUALIZADO procesado");
-    const zonaTest = document.getElementById("zonaTest");
-    const resumen = document.getElementById("resumenTest");
-
-    const testVisible = zonaTest && zonaTest.style.display === "block";
-    const resumenVisible = resumen && resumen.style.display === "block";
-
-    // Si estamos en pantalla de selección, reconstruir todo
-    if (!testVisible && !resumenVisible) {
-      initTest();
-    } else {
-      // Si estamos en test o resumen, solo actualizar contadores
-      if (typeof pintarCheckboxesTemas === "function") {
-        pintarCheckboxesTemas();
-      }
-    }
-  }
-});
-
-// 🔄 Forzar actualización de contadores al volver a la pestaña Test
-window.addEventListener("focus", () => {
-  if (typeof pintarCheckboxesTemas === "function") {
+    // banco ya se sincroniza desde Firebase, solo repintar
     pintarCheckboxesTemas();
-  }
-});
-
-document.addEventListener("visibilitychange", () => {
-  if (!document.hidden) {
-    if (typeof pintarCheckboxesTemas === "function") {
-      pintarCheckboxesTemas();
-    }
   }
 });
 
@@ -215,12 +83,13 @@ window.addEventListener("storage", (e) => {
 function initTest() {
   asegurarTemaFalladas();
 
-  // Reconstruir el tema de falladas según estadísticas del usuario
+  // Reconstruir el tema de preguntas falladas desde los datos reales
   banco["__falladas__"] = [];
   Object.keys(banco).forEach(tema => {
     if (tema === "__falladas__") return;
     banco[tema].forEach(p => {
-      if ((p.fallada || 0) > 0) {
+      const fallos = Number(p.fallada) || 0;
+      if (fallos > 0) {
         banco["__falladas__"].push(p);
       }
     });
@@ -460,6 +329,9 @@ function iniciarTest() {
 
     // CAMBIO 2A: Capturar fallos antes del test (modo __falladas__)
     fallosSesionAntes = 0;
+    preguntasTest.forEach(p => {
+      fallosSesionAntes += p.fallada || 0;
+    });
 
     zonaTest.innerHTML = "";
     zonaTest.style.display = "block";
@@ -512,6 +384,9 @@ function iniciarTest() {
   }
   // CAMBIO 2B: Capturar fallos antes del test (modo normal)
   fallosSesionAntes = 0;
+  preguntasTest.forEach(p => {
+    fallosSesionAntes += p.fallada || 0;
+  });
 
   preguntasTest.forEach((p, i) => {
     zonaTest.appendChild(crearBloquePregunta(p, i));
@@ -607,17 +482,21 @@ function corregirTest() {
   if (pantallaSeleccion) pantallaSeleccion.style.display = "none";
 
   // CAMBIO 3: Capturar fallos después de corregir
-  fallosSesionDespues = preguntasFalladas.length;
+  fallosSesionDespues = 0;
+  preguntasTest.forEach(p => {
+    fallosSesionDespues += p.fallada || 0;
+  });
 
   // CAMBIO 3: limpieza visual para evitar radios fantasma
   zonaTest.innerHTML = "";
 
-  // Reconstruir el tema de falladas inmediatamente tras el test
+  // Reconstruir tema de falladas tras corregir
   banco["__falladas__"] = [];
   Object.keys(banco).forEach(tema => {
     if (tema === "__falladas__") return;
     banco[tema].forEach(p => {
-      if ((p.fallada || 0) > 0) {
+      const fallos = Number(p.fallada) || 0;
+      if (fallos > 0) {
         banco["__falladas__"].push(p);
       }
     });
@@ -729,18 +608,19 @@ function asegurarTemaFalladas() {
 }
 
 function actualizarPreguntaFallada(pregunta, acertada) {
-  // Solo guardar fallo por usuario en Firebase
-  if (!acertada && pregunta && pregunta.id) {
-    // Incremento local para el contador inmediato
-    pregunta.fallada = (pregunta.fallada || 0) + 1;
+  const actual = Number(pregunta.fallada) || 0;
+  let nuevo = actual;
 
-    // Envío a Firebase
-    if (window.guardarFalloUsuario) {
-      console.log("[TEST] Enviando fallo a Firebase:", pregunta.id);
-      window.guardarFalloUsuario(pregunta.id);
-    } else {
-      console.error("[TEST] guardarFalloUsuario no está disponible");
-    }
+  // Solo aumentar cuando se falla. Nunca reducir automáticamente.
+  if (!acertada) {
+    nuevo = actual + 1;
+  }
+
+  pregunta.fallada = nuevo;
+
+  // Sincronizar en Firebase
+  if (pregunta.id && window.actualizarFallada) {
+    window.actualizarFallada(pregunta.id, nuevo);
   }
 }
 
@@ -748,7 +628,7 @@ function seleccionarPreguntasPonderadas(preguntas, num) {
   let pool = [];
 
   preguntas.forEach(p => {
-    const peso = 1;
+    const peso = 1 + (p.fallada || 0);
     for (let i = 0; i < peso; i++) {
       pool.push(p);
     }

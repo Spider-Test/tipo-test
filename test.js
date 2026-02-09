@@ -295,6 +295,21 @@ async function iniciarTest() {
     banco = cargarBanco();
   }
 
+  // Reconstruir siempre el tema de falladas con los datos actuales
+  asegurarTemaFalladas();
+  banco["__falladas__"] = [];
+
+  Object.keys(banco).forEach(tema => {
+    if (tema === "__falladas__") return;
+
+    banco[tema].forEach(p => {
+      const fallos = p.fallada || p.fallos || 0;
+      if (fallos > 0) {
+        banco["__falladas__"].push(p);
+      }
+    });
+  });
+
   const zonaTest = document.getElementById("zonaTest");
   const corregirBtn = document.getElementById("corregirBtn");
 

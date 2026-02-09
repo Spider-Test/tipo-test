@@ -137,7 +137,7 @@
     const btnLogout = document.getElementById("btnLogout");
 
     btnLogout.onclick = async () => {
-      const confirmar = confirm("¿Cerrar sesión?");
+      const confirmar = confirm("¿Seguro que quieres cerrar sesión?");
       if (!confirmar) return;
       await signOut(auth);
     };

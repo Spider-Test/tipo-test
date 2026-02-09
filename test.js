@@ -54,7 +54,7 @@ let segundosRestantes = 0;
 let preguntasEnBlanco = [];
 
 
-document.addEventListener("DOMContentLoaded", async () => {
+async function iniciarAppTest() {
   if (window.cargarDesdeFirebase) {
     banco = await window.cargarDesdeFirebase();
     console.log("Banco cargado desde Firebase (test)");
@@ -68,20 +68,18 @@ document.addEventListener("DOMContentLoaded", async () => {
       Object.keys(banco).forEach(tema => {
         if (tema === "__falladas__") return;
         banco[tema].forEach(p => {
-          if (p.id && stats[p.id] !== undefined) {
-            p.fallada = stats[p.id];
-          } else {
-            p.fallada = 0;
-          }
+          p.fallada = stats[p.id] || 0;
         });
       });
     }
-
   } else {
     banco = cargarBancoLocal();
   }
+
   initTest();
-});
+}
+
+document.addEventListener("DOMContentLoaded", iniciarAppTest);
 
 // 🔄 Sincronización directa con el editor (misma página)
 window.addEventListener("message", (e) => {

@@ -662,7 +662,25 @@ function resetearSoloFalladas() {
     return;
   }
 
+  // Poner a 0 el contador en todas las preguntas reales
+  Object.keys(banco).forEach(tema => {
+    if (tema === "__falladas__") return;
+
+    banco[tema].forEach(p => {
+      if ((p.fallada || 0) > 0) {
+        p.fallada = 0;
+
+        // Sincronizar con Firebase
+        if (p.id && window.actualizarFallada) {
+          window.actualizarFallada(p.id, 0);
+        }
+      }
+    });
+  });
+
+  // Reconstruir el tema de falladas vacío
   banco["__falladas__"] = [];
+
   guardarBancoLocal();
   alert("Preguntas más falladas reseteadas");
 

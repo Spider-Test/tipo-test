@@ -109,6 +109,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (typeof pintarCheckboxesTemas === "function") {
         pintarCheckboxesTemas();
       }
+
+      // Si no hay test en curso, reconfigurar pantalla inicial
+      const zonaTest = document.getElementById("zonaTest");
+      if (!zonaTest || zonaTest.style.display === "none") {
+        initTest();
+      }
     });
   } else {
     banco = cargarBancoLocal();

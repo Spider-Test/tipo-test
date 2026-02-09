@@ -1,5 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBQw64gv58J684nbD1QIAqkrIPkbVg_8DU",
@@ -76,9 +77,6 @@ window.eliminarPreguntaFirebase = eliminarPreguntaFirebase;
 // ESTADÍSTICAS POR USUARIO
 // ===============================
 
-import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { doc as docStats, getDoc, setDoc, updateDoc as updateDocStats } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
 const auth = getAuth(app);
 
 // Guardar fallo por usuario
@@ -90,12 +88,12 @@ window.guardarFalloUsuario = async function (preguntaId) {
       return;
     }
 
-    const ref = docStats(db, "estadisticas", user.uid, "preguntas", preguntaId);
+    const ref = doc(db, "estadisticas", user.uid, "preguntas", preguntaId);
     const snap = await getDoc(ref);
 
     if (snap.exists()) {
       const actual = snap.data().fallos || 0;
-      await updateDocStats(ref, { fallos: actual + 1 });
+      await updateDoc(ref, { fallos: actual + 1 });
     } else {
       await setDoc(ref, { fallos: 1 });
     }

@@ -171,7 +171,7 @@ function pintarCheckboxesTemas() {
 
     if (tema === "__falladas__") {
       nombreVisible = "📌 Preguntas más falladas";
-      contador = banco["__falladas__"].filter(p => p.fallos > 0).length;
+      contador = banco["__falladas__"].filter(p => (p.fallada || 0) > 0).length;
     } else {
       contador = banco[tema].length;
     }
@@ -279,7 +279,7 @@ function iniciarTest() {
   if (temasSeleccionados.includes("__falladas__")) {
     asegurarTemaFalladas();
 
-    const falladas = banco["__falladas__"].filter(p => p.fallos > 0);
+    const falladas = banco["__falladas__"].filter(p => (p.fallada || 0) > 0);
 
     if (falladas.length === 0) {
       alert("No hay preguntas falladas todavía");
@@ -290,7 +290,7 @@ function iniciarTest() {
 
     // Construimos pool ponderado
     falladas.forEach(p => {
-      const peso = Math.max(1, p.fallos);
+      const peso = Math.max(1, p.fallada || 0);
       for (let i = 0; i < peso; i++) {
         pool.push(p);
       }
@@ -316,7 +316,7 @@ function iniciarTest() {
     // CAMBIO 2A: Capturar fallos antes del test (modo __falladas__)
     fallosSesionAntes = 0;
     preguntasTest.forEach(p => {
-      fallosSesionAntes += p.fallos || 0;
+      fallosSesionAntes += p.fallada || 0;
     });
 
     zonaTest.innerHTML = "";
@@ -371,7 +371,7 @@ function iniciarTest() {
   // CAMBIO 2B: Capturar fallos antes del test (modo normal)
   fallosSesionAntes = 0;
   preguntasTest.forEach(p => {
-    fallosSesionAntes += p.fallos || 0;
+    fallosSesionAntes += p.fallada || 0;
   });
 
   preguntasTest.forEach((p, i) => {
@@ -469,7 +469,7 @@ function corregirTest() {
   // CAMBIO 3: Capturar fallos después de corregir
   fallosSesionDespues = 0;
   preguntasTest.forEach(p => {
-    fallosSesionDespues += p.fallos || 0;
+    fallosSesionDespues += p.fallada || 0;
   });
 
   // CAMBIO 3: limpieza visual para evitar radios fantasma

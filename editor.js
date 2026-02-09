@@ -461,6 +461,23 @@ function controlarInputTema() {
   }
 }
 
+// Exponer función para el HTML (onchange)
+window.usarTemaExistente = function () {
+  const select = document.getElementById("temaExistente");
+  const input = document.getElementById("tema");
+
+  if (!select || !input) return;
+
+  if (select.value) {
+    input.value = select.value;
+    input.disabled = true;
+    input.placeholder = "Usando tema existente";
+  } else {
+    input.disabled = false;
+    input.placeholder = "Nuevo tema";
+  }
+};
+
 
 function renombrarTema() {
   const select = document.getElementById("temaRenombrar");

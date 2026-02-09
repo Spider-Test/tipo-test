@@ -1,3 +1,4 @@
+
 // === Mostrar opciones corregidas: a), b), c), d) con colores ===
 function renderizarOpcionesCorregidas(p) {
   let html = "";

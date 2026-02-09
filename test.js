@@ -38,18 +38,7 @@ function guardarBanco() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(banco));
 }
 
-let banco = cargarBanco();
-
-// Cargar banco desde Firebase si está disponible
-if (window.cargarDesdeFirebase) {
-  window.cargarDesdeFirebase().then(bancoFirebase => {
-    banco = bancoFirebase;
-    if (typeof pintarCheckboxesTemas === "function") {
-      pintarCheckboxesTemas();
-    }
-    console.log("Banco cargado desde Firebase");
-  });
-}
+let banco = {};
 let preguntasTest = [];
 let preguntasAcertadas = [];
 let preguntasFalladas = [];
@@ -83,8 +72,16 @@ window.addEventListener("storage", (e) => {
   }
 });
 
-function initTest() {
-  banco = cargarBanco();
+async function initTest() {
+  // Cargar banco desde Firebase si está disponible
+  if (window.cargarDesdeFirebase) {
+    banco = await window.cargarDesdeFirebase();
+    console.log("Banco cargado desde Firebase al iniciar test");
+  } else {
+    banco = cargarBanco();
+  }
+
+  // Asegurar estructura local
   asegurarTemaFalladas();
   guardarBanco();
 
@@ -701,6 +698,15 @@ function resetearSoloFalladas() {
     return;
   }
 
+  // Poner a cero los fallos en Firebase
+  if (banco["__falladas__"] && window.actualizarFallada) {
+    banco["__falladas__"].forEach(p => {
+      if (p.id) {
+        window.actualizarFallada(p.id, 0);
+      }
+    });
+  }
+
   banco["__falladas__"] = [];
   guardarBanco();
   alert("Preguntas más falladas reseteadas");
@@ -729,10 +735,15 @@ function resetearFallosPorTema() {
     return;
   }
 
-  // Resetear fallos de las preguntas del tema
+  // Resetear fallos de las preguntas del tema y sincronizar con Firebase
   banco[tema].forEach(p => {
     if (typeof p.fallos === "number") {
       p.fallos = 0;
+    }
+
+    // Sincronizar con Firebase
+    if (p.id && window.actualizarFallada) {
+      window.actualizarFallada(p.id, 0);
     }
   });
 

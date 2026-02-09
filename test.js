@@ -81,8 +81,27 @@ async function initTest() {
     banco = cargarBanco();
   }
 
-  // Asegurar estructura local
+  // Reconstruir tema de falladas desde los datos de Firebase
   asegurarTemaFalladas();
+  banco["__falladas__"] = [];
+
+  Object.keys(banco).forEach(tema => {
+    if (tema === "__falladas__") return;
+
+    banco[tema].forEach(p => {
+      if ((p.fallos || p.fallada || 0) > 0) {
+        banco["__falladas__"].push({
+          pregunta: p.pregunta,
+          opciones: p.opciones,
+          correcta: p.correcta,
+          feedback: p.feedback || "",
+          fallos: p.fallos || p.fallada || 0,
+          id: p.id
+        });
+      }
+    });
+  });
+
   guardarBanco();
 
   cargarTemas();

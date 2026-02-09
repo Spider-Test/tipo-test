@@ -483,7 +483,10 @@ button[onclick*="blanco"] {
 
 <div id="pantallaSeleccion" class="inicio">
 
-<h1>Realizar test</h1>
+<div style="display:flex; align-items:center; justify-content:center; gap:10px;">
+  <h1 style="margin:0;">Realizar test</h1>
+  <button id="btnRefrescarTest" style="font-size:13px; padding:4px 10px;">Refrescar</button>
+</div>
 
 <!-- Modo simulacro -->
 <div id="simulacroBox">
@@ -623,6 +626,15 @@ button[onclick*="blanco"] {
 
 </div>
 
+</script>
+<script>
+  const btnRefrescarTest = document.getElementById("btnRefrescarTest");
+  if (btnRefrescarTest) {
+    btnRefrescarTest.onclick = () => {
+      location.reload();
+    };
+  }
+</script>
 <!-- Lógica del test gestionada íntegramente en test.js -->
 <script type="module" src="firebase.js"></script>
 <script src="test.js"></script>

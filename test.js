@@ -61,6 +61,21 @@ document.addEventListener("DOMContentLoaded", async () => {
   } else {
     banco = cargarBancoLocal();
   }
+
+  if (window.cargarEstadisticasUsuario) {
+    const estadisticas = await window.cargarEstadisticasUsuario();
+    console.log("Estadísticas cargadas:", estadisticas);
+
+    Object.keys(banco).forEach(tema => {
+      if (tema === "__falladas__") return;
+      banco[tema].forEach(p => {
+        if (p.id && estadisticas[p.id]) {
+          p.fallada = estadisticas[p.id].fallada || 0;
+        }
+      });
+    });
+  }
+
   initTest();
 });
 

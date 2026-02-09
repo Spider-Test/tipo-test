@@ -173,6 +173,21 @@ window.addEventListener("message", (e) => {
   }
 });
 
+// 🔄 Forzar actualización de contadores al volver a la pestaña Test
+window.addEventListener("focus", () => {
+  if (typeof pintarCheckboxesTemas === "function") {
+    pintarCheckboxesTemas();
+  }
+});
+
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) {
+    if (typeof pintarCheckboxesTemas === "function") {
+      pintarCheckboxesTemas();
+    }
+  }
+});
+
 // 🔄 Sincronización automática con el editor
 window.addEventListener("storage", (e) => {
   if (e.key === STORAGE_KEY) {

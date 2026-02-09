@@ -89,7 +89,7 @@ async function initTest() {
     if (tema === "__falladas__") return;
 
     banco[tema].forEach(p => {
-      const fallos = p.fallada || p.fallos || 0;
+      const fallos = p.fallada || 0;
       if (fallos > 0) {
         banco["__falladas__"].push({
           pregunta: p.pregunta,
@@ -97,6 +97,7 @@ async function initTest() {
           correcta: p.correcta,
           feedback: p.feedback || "",
           fallos: fallos,
+          fallada: fallos,
           id: p.id
         });
       }
@@ -308,7 +309,7 @@ async function iniciarTest() {
   ) {
     asegurarTemaFalladas();
 
-    const falladas = banco["__falladas__"].filter(p => p.fallos > 0);
+    const falladas = banco["__falladas__"].filter(p => (p.fallada || p.fallos || 0) > 0);
 
     if (falladas.length === 0) {
       alert("No hay preguntas falladas todavía");

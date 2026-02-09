@@ -275,6 +275,16 @@ function controlarInputTema() {
   }
 }
 
+function usarTemaExistente() {
+  const select = document.getElementById("temaExistente");
+  const input = document.getElementById("tema");
+  if (!select || !input) return;
+
+  if (select.value) {
+    input.value = select.value;
+  }
+}
+
 // Ocultar el tema automático de falladas del editor
 function ocultarTemaFalladas() {
   const selects = [

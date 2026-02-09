@@ -715,8 +715,18 @@ function actualizarPreguntaFallada(pregunta, acertada) {
   }
   // Si se acierta, no se modifica el contador
 
-  // Actualizar en el objeto local
+  // Actualizar en el objeto local del test
   pregunta.fallada = nuevo;
+
+  // Sincronizar también en el banco principal
+  Object.keys(banco).forEach(tema => {
+    if (tema === "__falladas__") return;
+    banco[tema].forEach(p => {
+      if (p.id && pregunta.id && p.id === pregunta.id) {
+        p.fallada = nuevo;
+      }
+    });
+  });
 
   // Sincronizar con Firebase si existe la función y la pregunta tiene id
   if (pregunta.id && window.actualizarFallada) {

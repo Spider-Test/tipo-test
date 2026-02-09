@@ -452,14 +452,19 @@ function controlarInputTema() {
   if (!select || !input) return;
 
   if (select.value) {
-    input.value = "";
+    input.value = select.value;
     input.disabled = true;
     input.placeholder = "Usando tema existente";
   } else {
     input.disabled = false;
+    input.value = "";
     input.placeholder = "Nuevo tema";
   }
 }
+
+window.usarTemaExistente = function () {
+  controlarInputTema();
+};
 
 
 function renombrarTema() {

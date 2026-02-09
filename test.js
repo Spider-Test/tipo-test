@@ -307,9 +307,22 @@ async function iniciarTest() {
     temasSeleccionados.length === 1 &&
     temasSeleccionados.includes("__falladas__")
   ) {
+    // Reconstruir siempre el tema de falladas desde los datos actuales
     asegurarTemaFalladas();
+    banco["__falladas__"] = [];
 
-    const falladas = banco["__falladas__"].filter(p => (p.fallada || p.fallos || 0) > 0);
+    Object.keys(banco).forEach(tema => {
+      if (tema === "__falladas__") return;
+
+      banco[tema].forEach(p => {
+        const fallos = p.fallada || p.fallos || 0;
+        if (fallos > 0) {
+          banco["__falladas__"].push(p);
+        }
+      });
+    });
+
+    const falladas = banco["__falladas__"];
 
     if (falladas.length === 0) {
       alert("No hay preguntas falladas todavía");

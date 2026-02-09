@@ -69,8 +69,19 @@ document.addEventListener("DOMContentLoaded", async () => {
     Object.keys(banco).forEach(tema => {
       if (tema === "__falladas__") return;
       banco[tema].forEach(p => {
-        if (p.id && estadisticas[p.id]) {
-          p.fallada = estadisticas[p.id].fallada || 0;
+        if (!p.id) return;
+
+        const stat = estadisticas[p.id];
+
+        // Soportar ambos formatos:
+        // 1) { idPregunta: numero }
+        // 2) { idPregunta: { fallada: numero } }
+        if (typeof stat === "number") {
+          p.fallada = stat;
+        } else if (stat && typeof stat === "object") {
+          p.fallada = stat.fallada || 0;
+        } else {
+          p.fallada = 0;
         }
       });
     });

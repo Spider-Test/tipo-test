@@ -87,6 +87,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
+  // Reconstruir el tema de falladas tras cargar estadísticas del usuario
+  banco["__falladas__"] = [];
+  Object.keys(banco).forEach(tema => {
+    if (tema === "__falladas__") return;
+    banco[tema].forEach(p => {
+      if ((p.fallada || 0) > 0) {
+        banco["__falladas__"].push(p);
+      }
+    });
+  });
+
   initTest();
 });
 
@@ -625,14 +636,15 @@ function asegurarTemaFalladas() {
 function actualizarPreguntaFallada(pregunta, acertada) {
   // Solo guardar fallo por usuario en Firebase
   if (!acertada && pregunta && pregunta.id) {
-    // Incremento local para que el contador se actualice sin recargar
+    // Incremento local para el contador inmediato
     pregunta.fallada = (pregunta.fallada || 0) + 1;
 
+    // Envío a Firebase
     if (window.guardarFalloUsuario) {
-      console.log("Guardando fallo en Firebase para:", pregunta.id);
+      console.log("[TEST] Enviando fallo a Firebase:", pregunta.id);
       window.guardarFalloUsuario(pregunta.id);
     } else {
-      console.error("guardarFalloUsuario no está disponible");
+      console.error("[TEST] guardarFalloUsuario no está disponible");
     }
   }
 }

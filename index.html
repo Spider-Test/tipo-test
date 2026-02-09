@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -54,10 +52,46 @@
       display: none;
       background: transparent;
     }
+
+    #loginScreen {
+      position: fixed;
+      inset: 0;
+      background: #f5f5f7;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+
+    .loginBox {
+      background: white;
+      padding: 30px 40px;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+
+    .loginBox button {
+      padding: 10px 20px;
+      border-radius: 10px;
+      border: none;
+      background: #007aff;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
   </style>
 </head>
 
 <body>
+
+  <div id="loginScreen">
+    <div class="loginBox">
+      <h2>Tipo Test</h2>
+      <p>Inicia sesión para continuar</p>
+      <button id="btnLogin">Iniciar sesión con Google</button>
+    </div>
+  </div>
 
   <header>
     <button id="btnEditor" class="activo">Editor</button>
@@ -101,15 +135,17 @@
       await signInWithPopup(auth, provider);
     };
 
+    const loginScreen = document.getElementById("loginScreen");
+
     onAuthStateChanged(auth, user => {
       if (user) {
         userInfo.textContent = "👤 " + user.displayName;
-        btnLogin.style.display = "none";
         window.currentUser = user;
+        loginScreen.style.display = "none";
       } else {
         userInfo.textContent = "";
-        btnLogin.style.display = "inline-block";
         window.currentUser = null;
+        loginScreen.style.display = "flex";
       }
     });
 

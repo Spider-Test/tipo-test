@@ -111,10 +111,21 @@ document.addEventListener("DOMContentLoaded", async () => {
         cargarTemas();
       }
 
-      // Si no hay test en curso, reconstruir pantalla inicial
+      // Si no hay test en curso, reconstruir pantalla inicial y contadores
       const zonaTest = document.getElementById("zonaTest");
-      if (!zonaTest || zonaTest.style.display === "none") {
+      const resumen = document.getElementById("resumenTest");
+
+      const testVisible = zonaTest && zonaTest.style.display === "block";
+      const resumenVisible = resumen && resumen.style.display === "block";
+
+      // Solo reconstruir si estamos en la pantalla de selección
+      if (!testVisible && !resumenVisible) {
         initTest();
+      } else {
+        // Si estamos viendo resumen o test, solo actualizar contadores
+        if (typeof pintarCheckboxesTemas === "function") {
+          pintarCheckboxesTemas();
+        }
       }
     });
   } else {

@@ -494,7 +494,7 @@ async function iniciarTest() {
   iniciarCronometro();
 }
 
-function corregirTest() {
+async function corregirTest() {
   const zonaTest = document.getElementById("zonaTest");
   const corregirBtn = document.getElementById("corregirBtn");
 
@@ -592,7 +592,11 @@ function corregirTest() {
   // CAMBIO 3: limpieza visual para evitar radios fantasma
   zonaTest.innerHTML = "";
 
-  // No tocar el banco local: Firebase es la fuente real
+  // Recargar banco desde Firebase para asegurar contadores correctos
+  if (window.cargarDesdeFirebase) {
+    banco = await window.cargarDesdeFirebase();
+  }
+
   if (typeof pintarCheckboxesTemas === "function") {
     pintarCheckboxesTemas();
   }

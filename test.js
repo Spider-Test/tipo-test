@@ -54,32 +54,15 @@ let segundosRestantes = 0;
 let preguntasEnBlanco = [];
 
 
-async function iniciarAppTest() {
+document.addEventListener("DOMContentLoaded", async () => {
   if (window.cargarDesdeFirebase) {
     banco = await window.cargarDesdeFirebase();
     console.log("Banco cargado desde Firebase (test)");
-
-    // Cargar estadísticas del usuario
-    if (window.cargarEstadisticasUsuario) {
-      const stats = await window.cargarEstadisticasUsuario();
-      console.log("Estadísticas cargadas:", stats);
-
-      // Aplicar fallos al banco
-      Object.keys(banco).forEach(tema => {
-        if (tema === "__falladas__") return;
-        banco[tema].forEach(p => {
-          p.fallada = stats[p.id] || 0;
-        });
-      });
-    }
   } else {
     banco = cargarBancoLocal();
   }
-
   initTest();
-}
-
-document.addEventListener("DOMContentLoaded", iniciarAppTest);
+});
 
 // 🔄 Sincronización directa con el editor (misma página)
 window.addEventListener("message", (e) => {
@@ -635,10 +618,9 @@ function actualizarPreguntaFallada(pregunta, acertada) {
 
   pregunta.fallada = nuevo;
 
-  // Sincronizar en Firebase por usuario SIEMPRE que exista id
-  if (pregunta.id && window.actualizarFalladaUsuario) {
-    console.log("Guardando fallo usuario:", pregunta.id, nuevo);
-    window.actualizarFalladaUsuario(pregunta.id, nuevo);
+  // Sincronizar en Firebase
+  if (pregunta.id && window.actualizarFallada) {
+    window.actualizarFallada(pregunta.id, nuevo);
   }
 }
 
@@ -705,9 +687,9 @@ function resetearSoloFalladas() {
       if ((p.fallada || 0) > 0) {
         p.fallada = 0;
 
-        // Sincronizar con Firebase por usuario
-        if (p.id && window.actualizarFalladaUsuario) {
-          window.actualizarFalladaUsuario(p.id, 0);
+        // Sincronizar con Firebase
+        if (p.id && window.actualizarFallada) {
+          window.actualizarFallada(p.id, 0);
         }
       }
     });
@@ -748,9 +730,9 @@ function resetearFallosPorTema() {
     if ((p.fallada || 0) > 0) {
       p.fallada = 0;
 
-      // Sincronizar con Firebase por usuario
-      if (p.id && window.actualizarFalladaUsuario) {
-        window.actualizarFalladaUsuario(p.id, 0);
+      // Sincronizar con Firebase
+      if (p.id && window.actualizarFallada) {
+        window.actualizarFallada(p.id, 0);
       }
     }
   });

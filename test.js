@@ -505,7 +505,6 @@ function corregirTest() {
     }
   });
 
-  guardarBanco();
   if (corregirBtn) {
     corregirBtn.style.display = "none";
   }

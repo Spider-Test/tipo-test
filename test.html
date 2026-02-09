@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Test</title>
+  <style>
+    /* ===== TEMA BASE (CLARO) ===== */
+    :root {
+      --bg-main: #f2f2f7;
+      --bg-card: rgba(255,255,255,0.9);
+      --text-main: #111111;
+      --border-main: rgba(0,0,0,0.15);
+      --shadow-main: rgba(0,0,0,0.25);
+
+      --accent-primary: #5e7ce2;
+      --accent-success: #2fb344;
+      --accent-error: #e5533d;
+      --accent-muted: #8e8e93;
+    }
+
+    /* ===== MODO OSCURO SEGÚN SISTEMA ===== */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-main: #121214;
+        --bg-card: rgba(40,40,44,0.9);
+        --text-main: #ffffff;
+        --border-main: rgba(255,255,255,0.25);
+        --shadow-main: rgba(0,0,0,0.6);
+
+        --accent-primary: #6b8cff;
+        --accent-success: #4cd964;
+        --accent-error: #ff6b5a;
+        --accent-muted: #a1a1a6;
+      }
+    }
+
+    /* ===== OVERRIDE MANUAL DESDE APP ===== */
+    body.theme-dark {
+      --bg-main: #121214;
+      --bg-card: rgba(40,40,44,0.9);
+      --text-main: #ffffff;
+      --border-main: rgba(255,255,255,0.25);
+      --shadow-main: rgba(0,0,0,0.6);
+
+      --accent-primary: #6b8cff;
+      --accent-success: #4cd964;
+      --accent-error: #ff6b5a;
+      --accent-muted: #a1a1a6;
+    }
+
+    body.theme-light {
+      --bg-main: #f2f2f7;
+      --bg-card: rgba(255,255,255,0.9);
+      --text-main: #111111;
+      --border-main: rgba(0,0,0,0.15);
+      --shadow-main: rgba(0,0,0,0.25);
+
+      --accent-primary: #5e7ce2;
+      --accent-success: #2fb344;
+      --accent-error: #e5533d;
+      --accent-muted: #8e8e93;
+    }
+
+    /* ===== BASE TIPOGRÁFICA iOS ===== */
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "SF Pro Text",
+        "SF Pro Display",
+        "Segoe UI",
+        Roboto,
+        Helvetica,
+        Arial,
+        sans-serif;
+      font-size: 15px;
+      line-height: 1.5;
+      background: var(--bg-main);
+      color: var(--text-main);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      min-height: 100%;
+    }
+
+    body {
+      padding: 24px 24px 0 24px;
+      padding-bottom: 0;
+      min-height: 100vh;
+    }
+
+    #pantallaSeleccion,
+    #zonaTest,
+    #resumenTest {
+      min-height: 100%;
+    }
+
+    #resumenTest {
+      margin-bottom: 0;
+    }
+
+    /* ===== CABECERAS ===== */
+    h1 {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    h2 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-top: 24px;
+    }
+
+    h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-top: 20px;
+    }
+
+    /* ===== TARJETAS / BLOQUES ===== */
+    #temasCheckboxes {
+      background: var(--bg-card);
+      border-radius: 16px;
+      padding: 14px;
+      box-shadow: 0 6px 18px var(--shadow-main);
+      margin-bottom: 16px;
+
+      max-width: 420px;
+    }
+
+    #zonaTest,
+    #resumenTest {
+      background: var(--bg-card);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 6px 18px var(--shadow-main);
+      margin-bottom: 16px;
+    }
+
+    /* ===== CONTROLES ===== */
+    input[type="number"] {
+      width: 100%;
+      max-width: 120px;
+      padding: 8px 10px;
+      font-size: 15px;
+      border-radius: 10px;
+      border: 1px solid var(--border-main);
+      background: var(--bg-card);
+      color: var(--text-main);
+    }
+
+    label {
+      font-weight: 500;
+      display: block;
+      margin-top: 12px;
+      margin-bottom: 6px;
+    }
+
+    /* ===== BOTONES ===== */
+    button {
+      padding: 8px 14px;
+      font-size: 15px;
+      font-weight: 500;
+      border-radius: 10px;
+      border: 1px solid var(--border-main);
+      cursor: pointer;
+      background: var(--bg-card);
+      color: var(--accent-primary);
+      box-shadow: none;
+      margin-top: 8px;
+    }
+
+    button:hover {
+      background: color-mix(in srgb, var(--bg-card) 85%, #000 15%);
+    }
+
+    /* ===== BOTONES SECUNDARIOS ===== */
+    button.secondary {
+      background: linear-gradient(
+        135deg,
+        rgba(120,120,120,0.4),
+        rgba(120,120,120,0.2)
+      );
+      color: var(--text-main);
+    }
+
+    /* ===== TOGGLE MODO ===== */
+    #modoToggle {
+      background: var(--bg-card);
+      color: var(--text-main);
+      border: 2px solid var(--border-main);
+      border-radius: 12px;
+      box-shadow: 0 4px 12px var(--shadow-main);
+    }
+
+    /* ===== CRONÓMETRO ===== */
+    #cronometro {
+      background: var(--bg-card);
+      padding: 10px 14px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px var(--shadow-main);
+    }
+
+    /* ===== SECCIONES DESPLEGABLES ===== */
+    #seccionFalladas,
+    #seccionAcertadas,
+    #seccionMarcadas {
+      background: var(--bg-main);
+      border-radius: 12px;
+      padding: 12px;
+      border: 1px solid var(--border-main);
+    }
+
+    /* ===== TEST LIMPIO Y COMPACTO ===== */
+
+    /* Cada pregunta */
+    #zonaTest > div {
+      margin-bottom: 18px;
+    }
+
+    /* Respuestas EN COLUMNA */
+    #zonaTest label {
+      display: block;          /* <-- CLAVE */
+      margin: 6px 0;
+      font-weight: 400;
+    }
+
+    /* Radio alineado y discreto */
+    #zonaTest input[type="radio"] {
+      margin-right: 6px;
+      accent-color: var(--accent-primary);
+      transform: scale(0.95);
+    }
+
+    /* Reduce aire extra */
+    #zonaTest br {
+      display: none;
+    }
+    /* ===== BOTONES DE SECCIONES (FALLADAS / ACERTADAS / MARCADAS) ===== */
+    button[onclick*="falladas"] {
+      color: var(--accent-error);
+    }
+
+    button[onclick*="acertadas"] {
+      color: var(--accent-success);
+    }
+
+    button[onclick*="marcadas"] {
+      color: var(--accent-muted);
+    }
+
+button[onclick*="blanco"] {
+  color: var(--accent-muted);
+  font-size: 15px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+    /* ===== JERARQUÍA DE TEXTO ===== */
+    h1, h2 {
+      color: var(--text-main);
+    }
+
+    h3 {
+      color: var(--accent-muted);
+    }
+
+    #resumenNumerico,
+    #tiempoFinalTest {
+      color: var(--accent-muted);
+    }
+
+    /* ===== SWITCH iOS SUTIL (ESTILO SETTINGS) ===== */
+
+    .modo-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 10px 0 16px;
+    }
+
+    .modo-label {
+      font-size: 14px;
+      color: var(--accent-muted);
+      font-weight: 500;
+    }
+
+    /* Switch base */
+    .ios-switch {
+      position: relative;
+      display: inline-block;
+      width: 36px;
+      height: 20px;
+    }
+
+    .ios-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    /* === FIX SWITCH iOS (ocultar checkbox real) === */
+    .ios-switch input {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    /* Pista (rail del switch) */
+    .slider {
+      position: absolute;
+      inset: 0;
+      background-color: #d1d1d6;              /* gris iOS visible */
+      border-radius: 20px;
+      border: 1px solid rgba(0,0,0,0.25);     /* BORDE CLAVE */
+      transition: background-color 0.2s ease;
+    }
+
+    /* Thumb */
+    .slider::before {
+      content: "";
+      position: absolute;
+      height: 16px;
+      width: 16px;
+      left: 2px;
+      top: 2px;
+      background-color: #fff;
+      border-radius: 50%;
+      transition: transform 0.2s ease;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+    }
+
+    /* Activo */
+    .ios-switch input:checked + .slider {
+      background-color: var(--accent-primary);
+    }
+
+    .ios-switch input:checked + .slider::before {
+      transform: translateX(16px);
+    }
+
+    /* Slider adaptado a tema */
+    .slider {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-main);
+    }
+
+    /* === FIX DEFINITIVO BARRA INFERIOR === */
+    body {
+      padding-bottom: 0;
+    }
+
+    #resumenTest {
+      margin-bottom: 0;
+    }
+
+    /* === OCULTAR TARJETAS VACÍAS === */
+    #zonaTest:empty,
+    #resumenTest:empty {
+      display: none;
+    }
+
+    /* === OCULTAR TARJETAS DE RESUMEN SIN CONTENIDO === */
+    #seccionFalladas:empty,
+    #seccionAcertadas:empty,
+    #seccionBlanco:empty,
+    #seccionMarcadas:empty {
+      display: none !important;
+    }
+
+    /* ===== TOOLTIP UX PREMIUM ===== */
+    .tooltip-wrapper {
+      position: relative;
+      display: inline-block;
+    }
+
+    .tooltip-text {
+      position: absolute;
+      bottom: 120%;
+      left: 50%;
+      transform: translateX(-50%) translateY(6px);
+      background: var(--text-main);
+      color: var(--bg-main);
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition:
+        opacity 0.25s ease,
+        transform 0.25s ease;
+      z-index: 50;
+    }
+
+    /* Tooltip solo al pasar el cursor y solo si está deshabilitado */
+    .tooltip-wrapper:hover #btnEmpezarTest:disabled + .tooltip-text {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .tooltip-wrapper:hover .tooltip-text {
+      transition-delay: 0.05s;
+    }
+
+
+    /* ===== BOTÓN iOS: TRANSICIÓN ACTIVADO / DESACTIVADO ===== */
+    #btnEmpezarTest {
+      transition:
+        background-color 0.25s ease,
+        color 0.25s ease,
+        opacity 0.25s ease,
+        transform 0.2s ease;
+    }
+
+    #btnEmpezarTest:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      color: var(--accent-muted);
+      background: var(--bg-card);
+      transform: scale(0.98);
+    }
+
+    #btnEmpezarTest:not(:disabled) {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    #btnEmpezarTest:not(:disabled):active {
+      transform: scale(0.96);
+    }
+
+    #pantallaSeleccion.inicio {
+      min-height: calc(100vh - 60px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding-top: 48px;
+      text-align: center;
+    }
+
+    #pantallaSeleccion.inicio > * {
+      width: 100%;
+      max-width: 520px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    #simulacroBox {
+      margin: 12px 0 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      text-align: center;
+    }
+
+    #cronometro {
+      display: none;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    #resumenTest {
+      display: none;
+    }
+
+    #corregirBtn {
+      display: none;
+    }
+</style>
+</head>
+<body>
+
+<div id="pantallaSeleccion" class="inicio">
+
+<h1>Realizar test</h1>
+
+<!-- Modo simulacro -->
+<div id="simulacroBox">
+  <span style="
+    font-weight:600;
+    display:flex;
+    align-items:center;
+    line-height:1.3;
+  ">
+    Modo simulacro
+  </span>
+
+  <label class="ios-switch" style="display:flex; align-items:center;">
+    <input type="checkbox" id="simulacroToggle">
+    <span class="slider"></span>
+  </label>
+</div>
+
+
+<div id="simulacroConfig" style="display:none; margin-bottom:16px;">
+  <label for="tiempoSimulacro">Tiempo del examen (minutos)</label>
+  <input
+    type="number"
+    id="tiempoSimulacro"
+    min="5"
+    step="5"
+    value="60"
+  >
+</div>
+
+
+<button
+  id="resetFallosBtn"
+  style="
+    margin-bottom:16px;
+    padding:6px 12px;
+    font-size:14px;
+    font-weight:500;
+    border-radius:10px;
+    border:1px solid var(--border-main);
+    background: var(--bg-card);
+    color: var(--accent-muted);
+  "
+>
+  🔄 Restablecer preguntas más falladas
+</button>
+
+<div id="resetTemaBox" style="margin-bottom:16px;">
+  <label for="resetTemaSelect">Restablecer estadísticas por tema</label>
+  <select id="resetTemaSelect" style="
+    width:100%;
+    max-width:260px;
+    padding:8px 10px;
+    border-radius:10px;
+    border:1px solid var(--border-main);
+    background:var(--bg-card);
+    color:var(--text-main);
+  ">
+    <option value="">— Selecciona un tema —</option>
+  </select>
+
+  <button id="resetTemaBtn" style="
+    margin-top:8px;
+    padding:6px 12px;
+    font-size:14px;
+    border-radius:10px;
+    border:1px solid var(--border-main);
+    background:var(--bg-card);
+    color:var(--accent-muted);
+  ">
+    🔄 Restablecer este tema
+  </button>
+</div>
+
+<h3>Temas</h3>
+<div id="temasCheckboxes"></div>
+
+<button onclick="seleccionarTodos()">Seleccionar todos</button>
+<button onclick="limpiarSeleccion()">Limpiar selección</button>
+
+<label>Nº de preguntas:</label>
+<input type="number" id="numPreguntas" min="1">
+
+
+<div class="tooltip-wrapper">
+  <button id="btnEmpezarTest" onclick="iniciarTest()">Empezar test</button>
+  <div class="tooltip-text" id="tooltipEmpezar">
+    Selecciona al menos un tema para comenzar
+  </div>
+</div>
+
+</div>
+
+<div id="cronometro">
+  ⏱️ Tiempo: <span id="tiempoTest">00:00</span>
+</div>
+
+<div id="zonaTest"></div>
+<button id="corregirBtn" onclick="corregirTest()">
+  Corregir test
+</button>
+
+<div id="resumenTest">
+
+  <div id="progresoSesion" style="margin-bottom:10px; font-weight:bold;"></div>
+
+  <h2>Resumen del test</h2>
+  <p id="resumenNumerico"></p>
+  <p id="tiempoFinalTest" style="font-weight:bold;"></p>
+
+  <button onclick="toggleSeccion('falladas')">
+    ❌ Preguntas falladas
+  </button>
+  <div id="seccionFalladas" style="display:none; margin-top:10px;"></div>
+
+  <button onclick="toggleSeccion('blanco')">
+    ⚪ Preguntas en blanco
+  </button>
+  <div id="seccionBlanco" style="display:none; margin-top:10px;"></div>
+
+  <button onclick="toggleSeccion('acertadas')">
+    ✅ Preguntas acertadas
+  </button>
+  <div id="seccionAcertadas" style="display:none; margin-top:10px;"></div>
+
+  <button onclick="toggleSeccion('marcadas')">
+    🔖 Preguntas marcadas
+  </button>
+  <div id="seccionMarcadas" style="display:none; margin-top:10px;"></div>
+
+  <div id="accionesResumen" style="margin-top:20px;">
+    <button onclick="repetirTest()">🔁 Repetir este test</button>
+    <button onclick="volverASeleccion()" style="margin-left:10px;">
+      ⬅️ Volver a selección
+    </button>
+  </div>
+
+</div>
+
+<!-- Lógica del test gestionada íntegramente en test.js -->
+<script type="module" src="firebase.js"></script>
+<script src="test.js"></script>
+</body>
+</html>

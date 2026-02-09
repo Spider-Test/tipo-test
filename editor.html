@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Editor de preguntas</title>
+  <style>
+    /* ===== TEMA BASE (CLARO) ===== */
+    :root {
+      --bg-main: #f2f2f7;
+      --bg-card: rgba(255,255,255,0.85);
+      --text-main: #111111;
+      --border-main: rgba(0,0,0,0.15);
+      --shadow-main: rgba(0,0,0,0.25);
+    }
+
+    /* ===== MODO OSCURO SEGÚN SISTEMA ===== */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-main: #121214;
+        --bg-card: rgba(40,40,44,0.85);
+        --text-main: #ffffff;
+        --border-main: rgba(255,255,255,0.25);
+        --shadow-main: rgba(0,0,0,0.6);
+      }
+    }
+
+    /* ===== OVERRIDE MANUAL DESDE APP ===== */
+    body.theme-dark {
+      --bg-main: #121214;
+      --bg-card: rgba(40,40,44,0.85);
+      --text-main: #ffffff;
+      --border-main: rgba(255,255,255,0.25);
+      --shadow-main: rgba(0,0,0,0.6);
+    }
+
+    body.theme-light {
+      --bg-main: #f2f2f7;
+      --bg-card: rgba(255,255,255,0.85);
+      --text-main: #111111;
+      --border-main: rgba(0,0,0,0.15);
+      --shadow-main: rgba(0,0,0,0.25);
+    }
+
+    /* ===== TIPOGRAFÍA iOS / APP NATIVA ===== */
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "SF Pro Text",
+        "SF Pro Display",
+        "Segoe UI",
+        Roboto,
+        Helvetica,
+        Arial,
+        sans-serif;
+      font-size: 15px;
+      line-height: 1.5;
+      color: var(--text-main);
+      background: var(--bg-main);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 16px 16px 24px 16px;
+      box-sizing: border-box;
+      background: var(--bg-main);
+    }
+
+    h1 {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    h2 {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 28px 0 12px;
+    }
+
+    label {
+      font-weight: 500;
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      font-family: inherit;
+      font-size: 15px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border-main);
+      background: var(--bg-card);
+      color: var(--text-main);
+      box-sizing: border-box;
+    }
+
+    input[type="radio"] {
+      width: auto;
+      padding: 0;
+      border: none;
+      background: transparent;
+    }
+
+    textarea {
+      resize: vertical;
+    }
+
+    button {
+      margin-top: 12px;
+      padding: 10px 18px;
+      font-size: 15px;
+      font-weight: 600;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      background: linear-gradient(
+        135deg,
+        rgba(76,175,80,0.9),
+        rgba(76,175,80,0.7)
+      );
+      color: #fff;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+    }
+
+    button:hover {
+      opacity: 0.95;
+    }
+
+    hr {
+      margin: 32px 0;
+      border: none;
+      height: 1px;
+      background: rgba(0,0,0,0.15);
+    }
+    /* ===== RESPUESTAS: ALINEACIÓN COMPACTA ===== */
+
+    #opcionesContainer {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .opcion {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      margin-left: 0;
+      padding-left: 0;
+      width: 100%;
+    }
+
+    .opcion input[type="radio"] {
+      accent-color: #34c759;
+      transform: scale(1.05);
+      margin: 0 6px 0 0;
+      flex-shrink: 0;
+    }
+
+    .opcion input[type="radio"]:checked + .letra {
+      color: #34c759;
+      transition: color 0.2s ease;
+    }
+
+    .opcion .letra {
+      font-weight: 600;
+      min-width: 18px;       /* reduce espacio horizontal */
+      text-align: left;     /* todo queda a la izquierda */
+    }
+
+    .opcion textarea {
+      width: 100%;
+      max-width: 520px;
+      resize: vertical;
+      flex: 1;
+    }
+</style>
+</head>
+<body>
+
+<h1>Editor de preguntas</h1>
+
+<label>Tema:</label>
+<input type="text" id="tema" placeholder="Nuevo tema"><br><br>
+
+<label>O seleccionar tema existente:</label>
+<select id="temaExistente" onchange="usarTemaExistente(); controlarInputTema();"></select><br><br>
+
+<label>Pregunta:</label>
+<textarea id="pregunta" rows="5"></textarea><br><br>
+
+<label>Número de respuestas:</label>
+<select id="numOpciones" onchange="actualizarOpciones()">
+  <option value="3">3</option>
+  <option value="4" selected>4</option>
+</select><br><br>
+
+<label>Respuestas:</label>
+<div id="opcionesContainer"></div><br>
+<label>Feedback / explicación (se mostrará al corregir):</label>
+<textarea id="feedback" rows="4"></textarea><br><br>
+
+<button onclick="guardarPregunta()">Guardar pregunta</button>
+
+<hr>
+
+<h2>Preguntas guardadas</h2>
+
+<label>Selecciona tema:</label><br>
+<select id="temaVista"></select>
+
+<div id="listaPreguntas" class="lista-preguntas"></div>
+
+<hr>
+
+<h2>Gestión de temas</h2>
+
+<label>Selecciona un tema para eliminar:</label><br>
+<select id="temaEliminar"></select><br><br>
+
+
+<button onclick="borrarTemaDesdeGestion()">
+  Eliminar tema
+</button>
+
+<hr style="margin:20px 0;">
+
+<h3>Renombrar tema</h3>
+
+<label>Selecciona tema:</label><br>
+<select id="temaRenombrar"></select><br><br>
+
+<label>Nuevo nombre:</label><br>
+<input type="text" id="nuevoNombreTema" placeholder="Nuevo nombre del tema"><br><br>
+
+<button onclick="renombrarTema()">Guardar nombre</button>
+
+<!-- Sin JS inline: lógica del editor en editor.js -->
+<script>
+  // Escuchar modo tema desde app.js (postMessage)
+  window.addEventListener("message", (event) => {
+    if (!event.data || event.data.tipo !== "modo-tema") return;
+
+    document.body.classList.remove("theme-dark", "theme-light");
+
+    if (event.data.tema === "dark") {
+      document.body.classList.add("theme-dark");
+    } else if (event.data.tema === "light") {
+      document.body.classList.add("theme-light");
+    }
+  });
+
+function controlarInputTema() {
+  const select = document.getElementById("temaExistente");
+  const input = document.getElementById("tema");
+  if (!select || !input) return;
+
+  if (select.value) {
+    input.disabled = true;
+    input.placeholder = "Usando tema existente";
+  } else {
+    input.disabled = false;
+    input.placeholder = "Nuevo tema";
+  }
+}
+
+// Ocultar el tema automático de falladas del editor
+function ocultarTemaFalladas() {
+  const selects = [
+    document.getElementById("temaExistente"),
+    document.getElementById("temaVista"),
+    document.getElementById("temaEliminar")
+  ];
+
+  selects.forEach(sel => {
+    if (!sel) return;
+    [...sel.options].forEach(opt => {
+      if (opt.value === "__falladas__" || opt.textContent.includes("falladas")) {
+        opt.remove();
+      }
+    });
+  });
+}
+
+// Ejecutar tras cargar la página
+window.addEventListener("load", () => {
+  setTimeout(() => {
+    controlarInputTema();
+    ocultarTemaFalladas();
+  }, 200);
+});
+</script>
+<script type="module" src="firebase.js"></script>
+<script src="editor.js"></script>
+</body>
+</html>

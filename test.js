@@ -83,17 +83,8 @@ window.addEventListener("storage", (e) => {
 function initTest() {
   asegurarTemaFalladas();
 
-  // Reconstruir el tema de preguntas falladas desde los datos reales
-  banco["__falladas__"] = [];
-  Object.keys(banco).forEach(tema => {
-    if (tema === "__falladas__") return;
-    banco[tema].forEach(p => {
-      const fallos = Number(p.fallada) || 0;
-      if (fallos > 0) {
-        banco["__falladas__"].push(p);
-      }
-    });
-  });
+  // El tema de falladas se gestionará por usuario desde Firebase
+  banco["__falladas__"] = banco["__falladas__"] || [];
 
   guardarBancoLocal();
 
@@ -490,17 +481,8 @@ function corregirTest() {
   // CAMBIO 3: limpieza visual para evitar radios fantasma
   zonaTest.innerHTML = "";
 
-  // Reconstruir tema de falladas tras corregir
-  banco["__falladas__"] = [];
-  Object.keys(banco).forEach(tema => {
-    if (tema === "__falladas__") return;
-    banco[tema].forEach(p => {
-      const fallos = Number(p.fallada) || 0;
-      if (fallos > 0) {
-        banco["__falladas__"].push(p);
-      }
-    });
-  });
+  // El tema de falladas se actualizará desde Firebase por usuario
+  banco["__falladas__"] = banco["__falladas__"] || [];
 
   // Actualizar contadores visibles
   if (typeof pintarCheckboxesTemas === "function") {
@@ -623,7 +605,7 @@ function seleccionarPreguntasPonderadas(preguntas, num) {
   let pool = [];
 
   preguntas.forEach(p => {
-    const peso = 1 + (p.fallada || 0);
+    const peso = 1;
     for (let i = 0; i < peso; i++) {
       pool.push(p);
     }

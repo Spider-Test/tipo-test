@@ -98,8 +98,16 @@ window.addEventListener("storage", (e) => {
 function initTest() {
   asegurarTemaFalladas();
 
-  // El tema de falladas se gestionará por usuario desde Firebase
-  banco["__falladas__"] = banco["__falladas__"] || [];
+  // Reconstruir el tema de falladas según estadísticas del usuario
+  banco["__falladas__"] = [];
+  Object.keys(banco).forEach(tema => {
+    if (tema === "__falladas__") return;
+    banco[tema].forEach(p => {
+      if ((p.fallada || 0) > 0) {
+        banco["__falladas__"].push(p);
+      }
+    });
+  });
 
   guardarBancoLocal();
 

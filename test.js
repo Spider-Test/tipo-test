@@ -1,4 +1,3 @@
-
 // === Mostrar opciones corregidas: a), b), c), d) con colores ===
 function renderizarOpcionesCorregidas(p) {
   let html = "";
@@ -59,26 +58,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (window.cargarDesdeFirebase) {
     banco = await window.cargarDesdeFirebase();
     console.log("Banco cargado desde Firebase (test)");
-
-    // Cargar estadísticas del usuario
-    if (window.cargarEstadisticasUsuario) {
-      const stats = await window.cargarEstadisticasUsuario();
-      console.log("Estadísticas cargadas:", stats);
-
-      // Aplicar estadísticas al banco
-      Object.keys(banco).forEach(tema => {
-        banco[tema].forEach(p => {
-          if (stats && stats[p.id] !== undefined) {
-            p.fallada = stats[p.id];
-          }
-        });
-      });
-    }
-
   } else {
     banco = cargarBancoLocal();
   }
-
   initTest();
 });
 

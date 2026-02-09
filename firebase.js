@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBQw64gv58J684nbD1QIAqkrIPkbVg_8DU",
@@ -38,8 +38,7 @@ export async function cargarDesdeFirebase() {
       pregunta: data.pregunta,
       opciones: data.opciones,
       correcta: data.correcta,
-      // las estadísticas ya no son globales
-      fallada: 0,
+      fallada: data.fallada || 0,
       feedback: data.feedback || ""
     });
   });
@@ -48,9 +47,13 @@ export async function cargarDesdeFirebase() {
 }
 
 export async function actualizarFallada(id, nuevoValor) {
-  // Redirige al sistema por usuario
-  if (window.actualizarFalladaUsuario) {
-    await window.actualizarFalladaUsuario(id, nuevoValor);
+  try {
+    console.log("Actualizando fallos en Firebase", id, nuevoValor);
+    const ref = doc(db, "preguntas", id);
+    await updateDoc(ref, { fallada: nuevoValor });
+    console.log("Fallada actualizada en Firebase");
+  } catch (err) {
+    console.error("Error al actualizar fallada", err);
   }
 }
 
@@ -68,44 +71,3 @@ export async function eliminarPreguntaFirebase(id) {
 }
 
 window.eliminarPreguntaFirebase = eliminarPreguntaFirebase;
-
-// ------------------------------
-// ESTADÍSTICAS POR USUARIO
-// ------------------------------
-
-// Guardar fallos por usuario
-window.actualizarFalladaUsuario = async function (preguntaId, valor) {
-  const user = window.currentUser;
-  if (!user) return;
-
-  const ref = doc(db, "estadisticas", user.uid, "preguntas", preguntaId);
-
-  try {
-    await setDoc(ref, { fallada: valor }, { merge: true });
-    console.log("Guardando fallo usuario:", preguntaId, valor);
-  } catch (e) {
-    console.error("Error guardando estadística usuario", e);
-  }
-};
-
-// Cargar estadísticas del usuario
-window.cargarEstadisticasUsuario = async function () {
-  const user = window.currentUser;
-  if (!user) return {};
-
-  const stats = {};
-
-  try {
-    const snapshot = await getDocs(
-      collection(db, "estadisticas", user.uid, "preguntas")
-    );
-
-    snapshot.forEach(docSnap => {
-      stats[docSnap.id] = docSnap.data().fallada || 0;
-    });
-  } catch (e) {
-    console.error("Error cargando estadísticas usuario", e);
-  }
-
-  return stats;
-};

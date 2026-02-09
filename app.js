@@ -36,15 +36,3 @@ if (btnEditor) {
 if (btnTest) {
   btnTest.addEventListener("click", mostrarTest);
 }
-
-// ===== LOGIN BOTÓN GOOGLE =====
-const btnLogin = document.getElementById("btnLogin");
-if (btnLogin) {
-  btnLogin.onclick = function () {
-    if (window.loginConGoogle) {
-      window.loginConGoogle();
-    } else {
-      console.error("loginConGoogle no está disponible");
-    }
-  };
-}

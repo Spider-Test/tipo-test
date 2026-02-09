@@ -97,6 +97,7 @@
     <div style="display:flex; gap:12px; align-items:center;">
       <button id="btnEditor" class="activo">Editor</button>
       <button id="btnTest">Test</button>
+      <button id="btnRefreshTest">Refrescar test</button>
     </div>
     <div style="margin-left:auto; display:flex; gap:12px; align-items:center;">
       <span id="userInfo"></span>
@@ -163,6 +164,13 @@
     });
 
     console.log("Firebase conectado");
+
+    const btnRefreshTest = document.getElementById("btnRefreshTest");
+    const iframeTest = document.getElementById("iframeTest");
+
+    btnRefreshTest.onclick = () => {
+      iframeTest.src = iframeTest.src;
+    };
   </script>
 </body>
 </html>

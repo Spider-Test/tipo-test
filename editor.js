@@ -445,7 +445,7 @@ function validarBorradoTema() {
   });
 }
 
-function controlarInputTema() {
+window.controlarInputTema = function () {
   const select = document.getElementById("temaExistente");
   const input = document.getElementById("tema");
 
@@ -475,6 +475,7 @@ window.usarTemaExistente = function () {
     input.placeholder = "Usando tema existente";
   } else {
     input.disabled = false;
+    input.value = "";
     input.placeholder = "Nuevo tema";
   }
 };

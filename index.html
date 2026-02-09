@@ -110,8 +110,8 @@
   </main>
 
   <!-- IMPORTANTE: app.js ES MÓDULO -->
-  <script src="app.js"></script>
-  <script>
+  <script type="module" src="app.js"></script>
+  <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";

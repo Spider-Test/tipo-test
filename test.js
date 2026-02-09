@@ -193,7 +193,18 @@ function pintarCheckboxesTemas() {
 
     if (tema === "__falladas__") {
       nombreVisible = "📌 Preguntas más falladas";
-      contador = banco["__falladas__"].filter(p => (p.fallada || p.fallos || 0) > 0).length;
+
+      let totalFalladas = 0;
+      Object.keys(banco).forEach(t => {
+        if (t === "__falladas__") return;
+        banco[t].forEach(p => {
+          if ((p.fallada || p.fallos || 0) > 0) {
+            totalFalladas++;
+          }
+        });
+      });
+
+      contador = totalFalladas;
     } else {
       contador = banco[tema].length;
     }

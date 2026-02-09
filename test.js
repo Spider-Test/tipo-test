@@ -106,11 +106,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
       });
 
-      if (typeof pintarCheckboxesTemas === "function") {
-        pintarCheckboxesTemas();
+      // Actualizar temas y contadores
+      if (typeof cargarTemas === "function") {
+        cargarTemas();
       }
 
-      // Si no hay test en curso, reconfigurar pantalla inicial
+      // Si no hay test en curso, reconstruir pantalla inicial
       const zonaTest = document.getElementById("zonaTest");
       if (!zonaTest || zonaTest.style.display === "none") {
         initTest();

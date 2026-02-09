@@ -94,11 +94,14 @@
   </div>
 
   <header>
-    <button id="btnEditor" class="activo">Editor</button>
-    <button id="btnTest">Test</button>
-    <button id="btnLogin">Iniciar sesión</button>
-    <button id="btnLogout" style="display:none">Cerrar sesión</button>
-    <span id="userInfo"></span>
+    <div style="display:flex; gap:12px; align-items:center;">
+      <button id="btnEditor" class="activo">Editor</button>
+      <button id="btnTest">Test</button>
+    </div>
+    <div style="margin-left:auto; display:flex; gap:12px; align-items:center;">
+      <span id="userInfo"></span>
+      <button id="btnLogout" style="display:none">Cerrar sesión</button>
+    </div>
   </header>
 
   <main>
@@ -134,6 +137,8 @@
     const btnLogout = document.getElementById("btnLogout");
 
     btnLogout.onclick = async () => {
+      const confirmar = confirm("¿Cerrar sesión?");
+      if (!confirmar) return;
       await signOut(auth);
     };
 
@@ -148,13 +153,11 @@
         userInfo.textContent = "👤 " + user.displayName;
         window.currentUser = user;
         loginScreen.style.display = "none";
-        btnLogin.style.display = "none";
         btnLogout.style.display = "inline-block";
       } else {
         userInfo.textContent = "";
         window.currentUser = null;
         loginScreen.style.display = "flex";
-        btnLogin.style.display = "inline-block";
         btnLogout.style.display = "none";
       }
     });

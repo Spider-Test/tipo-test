@@ -647,6 +647,16 @@ function actualizarPreguntaFallada(pregunta, acertada) {
     existente.fallos += 1;
   }
 
+  // Actualizar también el contador en la pregunta original
+  if (typeof pregunta.fallos === "number") {
+    pregunta.fallos = existente.fallos;
+  } else {
+    pregunta.fallos = existente.fallos;
+  }
+
+  // Mantener compatibilidad con el campo de Firebase
+  pregunta.fallada = existente.fallos;
+
   // Sincronizar con Firebase si existe la función y la pregunta tiene id
   if (pregunta.id) {
     if (window.actualizarFallada) {

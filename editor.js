@@ -462,9 +462,6 @@ function controlarInputTema() {
   }
 }
 
-window.usarTemaExistente = function () {
-  controlarInputTema();
-};
 
 
 window.controlarInputTema = controlarInputTema;

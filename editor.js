@@ -25,14 +25,16 @@ function initEditor() {
       cargarTemasVista();
       cargarTemasExistentes();
       cargarSelectEliminar();
+      cargarSelectRenombrar();
     });
+  } else {
+    limpiarTemasVacios();
+    actualizarOpciones();
+    cargarTemasVista();
+    cargarTemasExistentes();
+    cargarSelectEliminar();
+    cargarSelectRenombrar();
   }
-  limpiarTemasVacios();
-  actualizarOpciones();
-  cargarTemasVista();
-  cargarTemasExistentes();
-  cargarSelectEliminar();
-  cargarSelectRenombrar();
   prepararValidacionFormulario();
   validarFormulario();
   prepararValidacionBorrado();
@@ -66,13 +68,30 @@ function guardarPregunta() {
   // MODO EDICIÓN
   if (editando) {
     const { tema: temaOriginal, index } = editando;
-    banco[temaOriginal][index] = {
+    const original = banco[temaOriginal][index];
+
+    const actualizada = {
       pregunta,
       opciones,
       correcta,
-      fallada: banco[temaOriginal][index].fallada || 0,
-      feedback
+      fallada: original.fallada || 0,
+      feedback,
+      id: original.id
     };
+
+    banco[temaOriginal][index] = actualizada;
+
+    // Sincronizar con Firebase si tiene id
+    if (actualizada.id && window.actualizarPreguntaFirebase) {
+      window.actualizarPreguntaFirebase(actualizada.id, {
+        tema: temaOriginal,
+        pregunta,
+        opciones,
+        correcta,
+        feedback
+      });
+    }
+
     editando = null;
   } else {
     if (!banco[tema]) banco[tema] = [];

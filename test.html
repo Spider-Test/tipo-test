@@ -483,7 +483,10 @@ button[onclick*="blanco"] {
 
 <div id="pantallaSeleccion" class="inicio">
 
-<h1>Realizar test</h1>
+<div style="display:flex; align-items:center; justify-content:center; gap:10px;">
+  <h1 style="margin:0;">Realizar test</h1>
+  <button id="btnRefrescarTest" style="font-size:14px;">Refrescar</button>
+</div>
 
 <!-- Modo simulacro -->
 <div id="simulacroBox">
@@ -569,14 +572,11 @@ button[onclick*="blanco"] {
 
 
 
-<div style="display:flex; justify-content:center; gap:10px; align-items:center;">
-  <div class="tooltip-wrapper">
-    <button id="btnEmpezarTest" onclick="iniciarTest()">Empezar test</button>
-    <div class="tooltip-text" id="tooltipEmpezar">
-      Selecciona al menos un tema para comenzar
-    </div>
+<div class="tooltip-wrapper" style="display:flex; justify-content:center;">
+  <button id="btnEmpezarTest" onclick="iniciarTest()">Empezar test</button>
+  <div class="tooltip-text" id="tooltipEmpezar">
+    Selecciona al menos un tema para comenzar
   </div>
-  <button id="btnRefrescarTest" style="font-size:14px;">Refrescar</button>
 </div>
 
 </div>

@@ -193,7 +193,7 @@ function pintarCheckboxesTemas() {
 
     if (tema === "__falladas__") {
       nombreVisible = "📌 Preguntas más falladas";
-      contador = banco["__falladas__"].filter(p => p.fallos > 0).length;
+      contador = banco["__falladas__"].filter(p => (p.fallada || p.fallos || 0) > 0).length;
     } else {
       contador = banco[tema].length;
     }
@@ -320,7 +320,7 @@ async function iniciarTest() {
 
     // Construimos pool ponderado
     falladas.forEach(p => {
-      const peso = Math.max(1, p.fallos);
+      const peso = Math.max(1, p.fallada || p.fallos || 0);
       for (let i = 0; i < peso; i++) {
         pool.push(p);
       }
@@ -346,7 +346,7 @@ async function iniciarTest() {
     // CAMBIO 2A: Capturar fallos antes del test (modo __falladas__)
     fallosSesionAntes = 0;
     preguntasTest.forEach(p => {
-      fallosSesionAntes += p.fallos || 0;
+      fallosSesionAntes += (p.fallada || p.fallos || 0);
     });
 
     zonaTest.innerHTML = "";

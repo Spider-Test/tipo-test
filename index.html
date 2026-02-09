@@ -97,6 +97,7 @@
     <button id="btnEditor" class="activo">Editor</button>
     <button id="btnTest">Test</button>
     <button id="btnLogin">Iniciar sesión</button>
+    <button id="btnLogout" style="display:none">Cerrar sesión</button>
     <span id="userInfo"></span>
   </header>
 
@@ -110,7 +111,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-    import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBQw64gv58J684nbD1QIAqkrIPkbVg_8DU",
@@ -130,6 +131,11 @@
 
     const btnLogin = document.getElementById("btnLogin");
     const userInfo = document.getElementById("userInfo");
+    const btnLogout = document.getElementById("btnLogout");
+
+    btnLogout.onclick = async () => {
+      await signOut(auth);
+    };
 
     btnLogin.onclick = async () => {
       await signInWithPopup(auth, provider);
@@ -142,10 +148,14 @@
         userInfo.textContent = "👤 " + user.displayName;
         window.currentUser = user;
         loginScreen.style.display = "none";
+        btnLogin.style.display = "none";
+        btnLogout.style.display = "inline-block";
       } else {
         userInfo.textContent = "";
         window.currentUser = null;
         loginScreen.style.display = "flex";
+        btnLogin.style.display = "inline-block";
+        btnLogout.style.display = "none";
       }
     });
 

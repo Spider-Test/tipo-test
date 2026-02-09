@@ -38,7 +38,9 @@ if (btnTest) {
 }
 
 // ===== LOGIN BOTÓN GOOGLE =====
-const btnLogin = document.getElementById("btnLogin");
-if (btnLogin && window.loginConGoogle) {
-  btnLogin.addEventListener("click", window.loginConGoogle);
-}
+document.addEventListener("DOMContentLoaded", () => {
+  const btnLogin = document.getElementById("btnLogin");
+  if (btnLogin && window.loginConGoogle) {
+    btnLogin.addEventListener("click", window.loginConGoogle);
+  }
+});

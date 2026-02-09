@@ -549,7 +549,16 @@ function corregirTest() {
     } else if (respuestaUsuario !== p.correcta) {
       div.style.background = "#ffe6e6";
       preguntasFalladas.push(resultado);
-      actualizarPreguntaFallada(p, false);
+
+      // Solo actualizar contador si NO es un test de preguntas falladas
+      const esTestFalladas =
+        ultimaConfiguracionTest &&
+        ultimaConfiguracionTest.temas.length === 1 &&
+        ultimaConfiguracionTest.temas.includes("__falladas__");
+
+      if (!esTestFalladas) {
+        actualizarPreguntaFallada(p, false);
+      }
     } else {
       div.style.background = "#e6ffe6";
       preguntasAcertadas.push(resultado);

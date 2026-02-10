@@ -22,8 +22,9 @@
       justify-content: center;
       gap: 12px;
       padding: 12px;
-      background: #ffffff;
+      background: rgba(255,255,255,0.9);
       border-bottom: 1px solid #ddd;
+      backdrop-filter: blur(10px);
     }
 
     header button {
@@ -81,6 +82,36 @@
       color: white;
       font-size: 16px;
       cursor: pointer;
+    }
+    @media (prefers-color-scheme: dark) {
+      body {
+        background: linear-gradient(180deg, #1c1c1e 0%, #2c2c2e 100%);
+        color: #f2f2f7;
+      }
+
+      header {
+        background: rgba(28,28,30,0.9);
+        border-bottom: 1px solid #3a3a3c;
+      }
+
+      header button {
+        background: #3a3a3c;
+        color: #f2f2f7;
+      }
+
+      header button.activo {
+        background: #0a84ff;
+        color: white;
+      }
+
+      #loginScreen {
+        background: #1c1c1e;
+      }
+
+      .loginBox {
+        background: #2c2c2e;
+        color: #f2f2f7;
+      }
     }
   </style>
   <link rel="manifest" href="manifest.json">

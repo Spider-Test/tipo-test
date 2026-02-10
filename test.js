@@ -75,9 +75,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 // 🔄 Sincronización directa con el editor (misma página)
-window.addEventListener("message", (e) => {
+window.addEventListener("message", async (e) => {
   if (e.data && e.data.type === "BANCO_ACTUALIZADO") {
-    // banco ya se sincroniza desde Firebase, solo repintar
+    if (window.cargarDesdeFirebase) {
+      banco = await window.cargarDesdeFirebase();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(banco));
+    }
     pintarCheckboxesTemas();
   }
 });

@@ -693,14 +693,22 @@ function mostrarResumen() {
 
   // Mostrar GIF de pleno de aciertos
   const gif = document.getElementById("gifPerfecto");
-  if (gif) {
+  const img = document.getElementById("gifPerfectoImg");
+
+  if (gif && img) {
     if (fallos === 0 && blancos === 0 && aciertos > 0) {
       gif.style.display = "block";
 
       // Forzar reinicio del GIF para simular bucle
-      const srcOriginal = gif.src;
-      gif.src = "";
-      gif.src = srcOriginal;
+      if (!img.dataset.looping) {
+        img.dataset.looping = "true";
+        setInterval(() => {
+          const src = img.src;
+          img.src = "";
+          img.src = src;
+        }, 3000);
+      }
+
     } else {
       gif.style.display = "none";
     }

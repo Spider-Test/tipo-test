@@ -200,9 +200,7 @@ function pintarCheckboxesTemas() {
 
     label.appendChild(checkbox);
 
-    const texto = tema === "__falladas__"
-      ? ` ${nombreVisible} (${contador})`
-      : ` ${nombreVisible} (${contador}) — sin contestar: ${nuevas}`;
+    const texto = ` ${nombreVisible} (${contador})`;
 
     label.appendChild(document.createTextNode(texto));
 

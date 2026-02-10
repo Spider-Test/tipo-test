@@ -185,6 +185,8 @@ body {
       resize: vertical;
       flex: 1;
     }
+
+    /* Removed .feedback-toggle and .lista-preguntas .feedback rules */
 </style>
 </head>
 <body>
@@ -209,7 +211,7 @@ body {
 <label>Respuestas:</label>
 <div id="opcionesContainer"></div><br>
 <label>Feedback / explicación (se mostrará al corregir):</label>
-<textarea id="feedback" rows="4"></textarea><br><br>
+<textarea id="feedback" rows="6" style="min-height:140px;"></textarea><br><br>
 
 <button onclick="guardarPregunta()">Guardar pregunta</button>
 

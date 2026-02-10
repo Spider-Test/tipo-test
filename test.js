@@ -181,12 +181,14 @@ function pintarCheckboxesTemas() {
   Object.keys(banco).forEach(tema => {
     let nombreVisible = tema;
     let contador = 0;
+    let nuevas = 0;
 
     if (tema === "__falladas__") {
       nombreVisible = "📌 Preguntas más falladas";
       contador = banco["__falladas__"].filter(p => (p.fallada || 0) > 0).length;
     } else {
       contador = banco[tema].length;
+      nuevas = banco[tema].filter(p => (p.fallada || 0) === 0).length;
     }
 
     const label = document.createElement("label");
@@ -197,9 +199,12 @@ function pintarCheckboxesTemas() {
     checkbox.addEventListener("change", actualizarEstadoBotonEmpezar);
 
     label.appendChild(checkbox);
-    label.appendChild(
-      document.createTextNode(` ${nombreVisible} (${contador})`)
-    );
+
+    const texto = tema === "__falladas__"
+      ? ` ${nombreVisible} (${contador})`
+      : ` ${nombreVisible} (${contador}) — sin contestar: ${nuevas}`;
+
+    label.appendChild(document.createTextNode(texto));
 
     contenedor.appendChild(label);
     contenedor.appendChild(document.createElement("br"));
@@ -368,6 +373,12 @@ function iniciarTest() {
     }
   });
 
+  // Filtro: solo preguntas nuevas (sin fallos)
+  const soloNuevasActivo = document.getElementById("soloNuevasToggle")?.checked;
+  if (soloNuevasActivo) {
+    poolPreguntas = poolPreguntas.filter(p => (p.fallada || 0) === 0);
+  }
+
   if (repasoActivo) {
     let falladas = [];
     let nuevas = [];
@@ -417,9 +428,28 @@ function iniciarTest() {
     }
 
     if (modoSimulacro) {
-      preguntasTest = poolPreguntas
+      const numSim = parseInt(document.getElementById("numPreguntasSimulacro")?.value);
+      const tipoOpciones = document.getElementById("tipoOpcionesSimulacro")?.value;
+
+      let poolSimulacro = poolPreguntas;
+
+      // Filtrar por número de opciones si está definido
+      if (tipoOpciones === "3") {
+        poolSimulacro = poolPreguntas.filter(p => p.opciones.length === 3);
+      } else if (tipoOpciones === "4") {
+        poolSimulacro = poolPreguntas.filter(p => p.opciones.length === 4);
+      }
+
+      if (poolSimulacro.length === 0) {
+        alert("No hay preguntas con ese tipo de respuestas en los temas seleccionados");
+        return;
+      }
+
+      const total = (isNaN(numSim) || numSim <= 0) ? poolSimulacro.length : numSim;
+
+      preguntasTest = poolSimulacro
         .sort(() => Math.random() - 0.5)
-        .slice(0, num);
+        .slice(0, total);
     } else {
       preguntasTest = seleccionarPreguntasPonderadas(
         poolPreguntas,

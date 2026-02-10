@@ -485,116 +485,84 @@ button[onclick*="blanco"] {
 
 <h1>Realizar test</h1>
 
-<!-- Modo simulacro -->
-<div id="simulacroBox">
-  <span style="
-    font-weight:600;
-    display:flex;
-    align-items:center;
-    line-height:1.3;
-  ">
-    Modo simulacro
-  </span>
-
-  <label class="ios-switch" style="display:flex; align-items:center;">
-    <input type="checkbox" id="simulacroToggle">
-    <span class="slider"></span>
-  </label>
-</div>
-
-
-<div id="simulacroConfig" style="display:none; margin-bottom:16px;">
-  <label for="tiempoSimulacro">Tiempo del examen (minutos)</label>
-  <input
-    type="number"
-    id="tiempoSimulacro"
-    min="5"
-    step="5"
-    value="60"
-  >
-</div>
-
-
-<button
-  id="resetFallosBtn"
-  style="
-    margin-bottom:16px;
-    padding:6px 12px;
-    font-size:14px;
-    font-weight:500;
-    border-radius:10px;
-    border:1px solid var(--border-main);
-    background: var(--bg-card);
-    color: var(--accent-muted);
-  "
->
-  🔄 Restablecer preguntas más falladas
-</button>
-
-<div id="resetTemaBox" style="margin-bottom:16px;">
-  <label for="resetTemaSelect">Restablecer estadísticas por tema</label>
-  <select id="resetTemaSelect" style="
-    width:100%;
-    max-width:260px;
-    padding:8px 10px;
-    border-radius:10px;
-    border:1px solid var(--border-main);
-    background:var(--bg-card);
-    color:var(--text-main);
-  ">
-    <option value="">— Selecciona un tema —</option>
-  </select>
-
-  <button id="resetTemaBtn" style="
-    margin-top:8px;
-    padding:6px 12px;
-    font-size:14px;
-    border-radius:10px;
-    border:1px solid var(--border-main);
-    background:var(--bg-card);
-    color:var(--accent-muted);
-  ">
-    🔄 Restablecer este tema
-  </button>
-</div>
-
-<h3>Temas</h3>
-<button id="btnRefrescarTest" style="
-  font-size:12px;
-  padding:4px 10px;
-  border-radius:999px;
-  border:1px solid var(--border-main);
-  background:var(--bg-card);
-  color:var(--accent-primary);
-  font-weight:600;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:4px;
-  margin:6px auto 10px auto;
+<div style="
+  background: var(--bg-card);
+  border: 1px solid var(--border-main);
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin: 6px 0 12px;
+  max-width: 320px;
 ">
-  ⟳ Refrescar
-</button>
-<label style="display:flex; align-items:center; justify-content:center; gap:6px; margin-bottom:8px; font-size:13px;">
-  <input type="checkbox" id="selectAllTemas">
-  Seleccionar todos los temas
-</label>
-<div id="temasCheckboxes"></div>
 
-<button onclick="seleccionarTodos()">Seleccionar todos</button>
-<button onclick="limpiarSeleccion()">Limpiar selección</button>
+  <!-- Modo simulacro -->
+  <div id="simulacroBox" style="display:flex; align-items:center; justify-content:space-between;">
+    <span style="font-weight:600;">Modo simulacro</span>
+    <label class="ios-switch">
+      <input type="checkbox" id="simulacroToggle">
+      <span class="slider"></span>
+    </label>
+  </div>
 
+  <div id="simulacroConfig" style="display:none; margin-top:10px;">
+    <label for="tiempoSimulacro">Tiempo del examen (minutos)</label>
+    <input
+      type="number"
+      id="tiempoSimulacro"
+      min="5"
+      step="5"
+      value="60"
+    >
 
-<label>Nº de preguntas:</label>
-<input type="number" id="numPreguntas" min="1">
+    <label for="numPreguntasSimulacro" style="margin-top:10px;">
+      Nº de preguntas del simulacro
+    </label>
+    <input
+      type="number"
+      id="numPreguntasSimulacro"
+      min="1"
+      step="1"
+      value="40"
+    >
 
-<div style="margin-top:12px; text-align:center;">
-  <label style="display:flex; align-items:center; justify-content:center; gap:6px; font-size:14px;">
-    <input type="checkbox" id="modoRepasoInteligente">
-    Modo repaso inteligente
-  </label>
+    <label for="tipoOpcionesSimulacro" style="margin-top:10px;">
+      Tipo de respuestas
+    </label>
+    <select id="tipoOpcionesSimulacro" style="
+      width:100%;
+      max-width:160px;
+      padding:6px 8px;
+      border-radius:8px;
+      border:1px solid var(--border-main);
+      background:var(--bg-card);
+      color:var(--text-main);
+      font-size:14px;
+    ">
+      <option value="4">4 respuestas</option>
+      <option value="3">3 respuestas</option>
+    </select>
+  </div>
 
-  <div id="repasoOpciones" style="display:none; margin-top:6px;">
+  <p style="
+    font-size:12px;
+    color: var(--accent-muted);
+    margin-top:6px;
+    line-height:1.4;
+  ">
+    Simula un examen real con tiempo limitado, número fijo de preguntas y tipo de respuestas definido. Las preguntas se toman únicamente de los temas que selecciones abajo.
+  </p>
+
+  <hr style="margin:14px 0; border:none; border-top:1px solid var(--border-main);">
+
+  <!-- Modo repaso inteligente -->
+  <div style="display:flex; align-items:center; justify-content:space-between;">
+    <span style="font-weight:600;">Modo repaso inteligente</span>
+    <label class="ios-switch">
+      <input type="checkbox" id="modoRepasoInteligente">
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <div id="repasoOpciones" style="display:none; margin-top:10px;">
     <label style="display:block; font-size:13px;">
       <input type="radio" name="repasoTipo" value="global" checked>
       Repaso global (todas las falladas)
@@ -604,7 +572,63 @@ button[onclick*="blanco"] {
       Solo falladas de los temas seleccionados
     </label>
   </div>
+  <p style="
+    font-size:12px;
+    color: var(--accent-muted);
+    margin-top:6px;
+    line-height:1.4;
+  ">
+    Mezcla automáticamente preguntas falladas y nuevas para reforzar tus errores sin dejar de avanzar en el temario. Las preguntas se toman únicamente de los temas que selecciones abajo.
+  </p>
+
+  <div style="margin-top:10px; text-align:center;">
+    <label style="display:flex; align-items:center; justify-content:space-between; font-weight:600;">
+      <span>Solo preguntas nuevas</span>
+      <label class="ios-switch">
+        <input type="checkbox" id="soloNuevasToggle">
+        <span class="slider"></span>
+      </label>
+    </label>
+    <p style="
+      font-size:12px;
+      color: var(--accent-muted);
+      margin-top:6px;
+      line-height:1.4;
+      text-align:left;
+    ">
+      Genera un test solo con preguntas que no hayas fallado todavía dentro de los temas seleccionados.
+    </p>
+  </div>
+
 </div>
+
+<h3>Temas</h3>
+<button id="btnRefrescarTest" style="
+  font-size:11px;
+  padding:3px 8px;
+  border-radius:999px;
+  border:1px solid var(--border-main);
+  background:var(--bg-card);
+  color:var(--accent-primary);
+  font-weight:600;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:3px;
+  margin:6px auto 10px auto;
+  max-width:110px;
+">
+  ⟳ Refrescar
+</button>
+<div id="temasCheckboxes"></div>
+
+<button onclick="seleccionarTodos()">Seleccionar todos</button>
+<button onclick="limpiarSeleccion()">Limpiar selección</button>
+
+
+<label>Nº de preguntas:</label>
+<input type="number" id="numPreguntas" min="1">
+
 
 
 
@@ -666,10 +690,26 @@ button[onclick*="blanco"] {
 <script>
   const repasoToggle = document.getElementById("modoRepasoInteligente");
   const repasoOpciones = document.getElementById("repasoOpciones");
+  const simulacroToggle = document.getElementById("simulacroToggle");
+  const simulacroConfig = document.getElementById("simulacroConfig");
 
   if (repasoToggle && repasoOpciones) {
     repasoToggle.addEventListener("change", () => {
       repasoOpciones.style.display = repasoToggle.checked ? "block" : "none";
+      if (repasoToggle.checked && simulacroToggle) {
+        simulacroToggle.checked = false;
+        if (simulacroConfig) simulacroConfig.style.display = "none";
+      }
+    });
+  }
+
+  if (simulacroToggle && simulacroConfig) {
+    simulacroToggle.addEventListener("change", () => {
+      simulacroConfig.style.display = simulacroToggle.checked ? "block" : "none";
+      if (simulacroToggle.checked && repasoToggle) {
+        repasoToggle.checked = false;
+        if (repasoOpciones) repasoOpciones.style.display = "none";
+      }
     });
   }
 </script>

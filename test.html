@@ -82,6 +82,7 @@
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
       min-height: 100%;
+      overscroll-behavior: none; /* evita rebote sin bloquear scroll vertical */
     }
 
     body {
@@ -94,6 +95,7 @@
     #zonaTest,
     #resumenTest {
       min-height: 100%;
+      overflow-x: hidden; /* bloquea desplazamiento lateral */
     }
 
     #resumenTest {

@@ -691,6 +691,21 @@ function mostrarResumen() {
   resumenNumerico.textContent =
     `Aciertos: ${aciertos} | Fallos: ${fallos} | En blanco: ${blancos}`;
 
+  // Mostrar GIF de pleno de aciertos
+  const gif = document.getElementById("gifPerfecto");
+  if (gif) {
+    if (fallos === 0 && blancos === 0 && aciertos > 0) {
+      gif.style.display = "block";
+
+      // Forzar reinicio del GIF para simular bucle
+      const srcOriginal = gif.src;
+      gif.src = "";
+      gif.src = srcOriginal;
+    } else {
+      gif.style.display = "none";
+    }
+  }
+
   // Activar botones de feedback
   resumen.querySelectorAll(".toggle-feedback").forEach(btn => {
     btn.addEventListener("click", () => {

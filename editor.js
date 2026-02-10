@@ -12,6 +12,33 @@ function guardarBanco() {
 let banco = cargarBanco();
 let editando = null;
 let textoBusqueda = "";
+let contadorResultados = 0;
+
+function normalizarTexto(texto) {
+  return (texto || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+// ====== RESALTAR TEXTO BUSCADO ======
+function resaltarTexto(textoOriginal, terminoBusqueda) {
+  if (!terminoBusqueda) return textoOriginal || "";
+
+  let texto = textoOriginal || "";
+
+  const palabras = normalizarTexto(terminoBusqueda)
+    .split(" ")
+    .filter(Boolean);
+
+  palabras.forEach(palabra => {
+    const regex = new RegExp(palabra, "gi");
+
+    texto = texto.replace(regex, match => `<mark>${match}</mark>`);
+  });
+
+  return texto;
+}
 
 /* ====== INICIALIZACIÓN ====== */
 document.addEventListener("DOMContentLoaded", initEditor);
@@ -50,7 +77,7 @@ function initEditor() {
   const buscador = document.getElementById("buscadorPreguntas");
   if (buscador) {
     buscador.addEventListener("input", (e) => {
-      textoBusqueda = e.target.value.toLowerCase();
+      textoBusqueda = normalizarTexto(e.target.value);
       mostrarPreguntas();
     });
   }
@@ -231,15 +258,32 @@ function mostrarPreguntas() {
 
   const tema = select.value;
   contenedor.innerHTML = "";
+  contadorResultados = 0;
   if (!tema || !banco[tema]) return;
 
   banco[tema].forEach((p, i) => {
-    if (
-      textoBusqueda &&
-      !p.pregunta.toLowerCase().includes(textoBusqueda) &&
-      !(p.feedback || "").toLowerCase().includes(textoBusqueda)
-    ) {
-      return;
+    let coincide = false;
+
+    if (textoBusqueda) {
+      const preguntaNorm = normalizarTexto(p.pregunta);
+      const feedbackNorm = normalizarTexto(p.feedback || "");
+      const opcionesNorm = (p.opciones || []).map(o => normalizarTexto(o));
+
+      const palabrasBusqueda = textoBusqueda.split(" ").filter(Boolean);
+      function contieneTodasLasPalabras(texto) {
+        return palabrasBusqueda.every(p => texto.includes(p));
+      }
+
+      coincide =
+        contieneTodasLasPalabras(preguntaNorm) ||
+        contieneTodasLasPalabras(feedbackNorm) ||
+        opcionesNorm.some(o => contieneTodasLasPalabras(o));
+
+      if (!coincide) {
+        return;
+      }
+
+      contadorResultados++;
     }
     const div = document.createElement("div");
     div.style.border = "1px solid #ccc";
@@ -247,18 +291,31 @@ function mostrarPreguntas() {
     div.style.margin = "8px 0";
 
     div.innerHTML = `
-      <strong>${i + 1}. ${p.pregunta}</strong><br>
+      <strong>${i + 1}. ${resaltarTexto(p.pregunta, textoBusqueda)}</strong><br>
       <ul>
         ${p.opciones.map((op, idx) =>
-          `<li ${idx === p.correcta ? 'style="font-weight:bold"' : ''}>${op}</li>`
+          `<li ${idx === p.correcta ? 'style="font-weight:bold"' : ''}>${resaltarTexto(op, textoBusqueda)}</li>`
         ).join("")}
       </ul>
-      ${p.feedback ? `<div style="margin-top:6px; white-space:pre-line;"><em>Feedback:</em>\n${p.feedback}</div>` : ""}
+      ${p.feedback ? `<div style="margin-top:6px; white-space:pre-line;"><em>Feedback:</em>\n${resaltarTexto(p.feedback, textoBusqueda)}</div>` : ""}
       <button onclick="cargarParaEditar('${tema}', ${i})">Editar</button>
       <button class="btn-borrar" onclick="borrarPregunta('${tema}', ${i})">Borrar</button>
     `;
     contenedor.appendChild(div);
   });
+
+  const contador = document.getElementById("contadorResultados");
+  if (contador) {
+    if (!textoBusqueda) {
+      contador.textContent = "";
+    } else {
+      contador.textContent =
+        contadorResultados +
+        " resultado" +
+        (contadorResultados === 1 ? "" : "s") +
+        " encontrados";
+    }
+  }
 }
 
 function cargarParaEditar(tema, index) {

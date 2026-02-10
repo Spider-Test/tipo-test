@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#007aff" />
+  <link rel="apple-touch-icon" href="icon-192.png">
   <title>Tipo Test</title>
 
   <style>
@@ -168,7 +170,7 @@
   <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("service-worker.js")
+    navigator.serviceWorker.register("./service-worker.js")
       .then(() => console.log("Service Worker activo"))
       .catch(err => console.log("Error SW:", err));
   });

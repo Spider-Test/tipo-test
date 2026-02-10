@@ -55,12 +55,22 @@ let preguntasEnBlanco = [];
 
 
 document.addEventListener("DOMContentLoaded", async () => {
-  if (window.cargarDesdeFirebase) {
-    banco = await window.cargarDesdeFirebase();
-    console.log("Banco cargado desde Firebase (test)");
-  } else {
+  try {
+    if (window.cargarDesdeFirebase) {
+      banco = await window.cargarDesdeFirebase();
+      console.log("Banco cargado desde Firebase (test)");
+
+      // Guardar copia local para modo offline
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(banco));
+    } else {
+      banco = cargarBancoLocal();
+      console.log("Banco cargado desde localStorage");
+    }
+  } catch (e) {
+    console.log("Sin conexión, usando copia local");
     banco = cargarBancoLocal();
   }
+
   initTest();
 });
 

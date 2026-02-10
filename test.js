@@ -702,6 +702,15 @@ function mostrarResumen() {
     }
   }
 
+  // Sonido de felicitación en pleno de aciertos
+  const audio = document.getElementById("audioFelicitacion");
+  if (audio) {
+    if (fallos === 0 && blancos === 0 && aciertos > 0) {
+      audio.currentTime = 0;
+      audio.play().catch(() => {});
+    }
+  }
+
   // Activar botones de feedback
   resumen.querySelectorAll(".toggle-feedback").forEach(btn => {
     btn.addEventListener("click", () => {

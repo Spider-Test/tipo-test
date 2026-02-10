@@ -3,13 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#0d0f14" media="(prefers-color-scheme: dark)">
-  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0d0f14">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   <title>Tipo Test</title>
 
   <style>
+    html {
+      background: #0d0f14;
+    }
     body {
       margin: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -87,7 +90,7 @@
     }
     @media (prefers-color-scheme: dark) {
       body {
-        background: linear-gradient(180deg, #1c1c1e 0%, #2c2c2e 100%);
+        background: linear-gradient(180deg, #0d0f14 0%, #1c1c1e 100%);
         color: #f2f2f7;
       }
 

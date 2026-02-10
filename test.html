@@ -483,10 +483,7 @@ button[onclick*="blanco"] {
 
 <div id="pantallaSeleccion" class="inicio">
 
-<div style="display:flex; align-items:center; justify-content:center; gap:10px;">
-  <h1 style="margin:0;">Realizar test</h1>
-  <button id="btnRefrescarTest" style="font-size:14px;">Refrescar</button>
-</div>
+<h1>Realizar test</h1>
 
 <!-- Modo simulacro -->
 <div id="simulacroBox">
@@ -562,6 +559,26 @@ button[onclick*="blanco"] {
 </div>
 
 <h3>Temas</h3>
+<button id="btnRefrescarTest" style="
+  font-size:12px;
+  padding:4px 10px;
+  border-radius:999px;
+  border:1px solid var(--border-main);
+  background:var(--bg-card);
+  color:var(--accent-primary);
+  font-weight:600;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  margin:6px auto 10px auto;
+">
+  ⟳ Refrescar
+</button>
+<label style="display:flex; align-items:center; justify-content:center; gap:6px; margin-bottom:8px; font-size:13px;">
+  <input type="checkbox" id="selectAllTemas">
+  Seleccionar todos los temas
+</label>
 <div id="temasCheckboxes"></div>
 
 <button onclick="seleccionarTodos()">Seleccionar todos</button>
@@ -634,6 +651,15 @@ button[onclick*="blanco"] {
     btnRefrescarTest.onclick = () => {
       location.reload();
     };
+  }
+</script>
+<script>
+  const selectAll = document.getElementById("selectAllTemas");
+  if (selectAll) {
+    selectAll.addEventListener("change", () => {
+      const checks = document.querySelectorAll('#temasCheckboxes input[type="checkbox"]');
+      checks.forEach(ch => ch.checked = selectAll.checked);
+    });
   }
 </script>
 <!-- Lógica del test gestionada íntegramente en test.js -->

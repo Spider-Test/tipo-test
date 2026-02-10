@@ -63,10 +63,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       // Guardar copia local para modo offline
       localStorage.setItem(STORAGE_KEY, JSON.stringify(banco));
     } else {
-      throw new Error("Firebase no disponible");
+      banco = cargarBancoLocal();
+      console.log("Banco cargado desde localStorage");
     }
   } catch (e) {
-    console.log("Sin conexión o Firebase no disponible, usando copia local");
+    console.log("Sin conexión, usando copia local");
     banco = cargarBancoLocal();
   }
 
@@ -74,17 +75,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 // 🔄 Sincronización directa con el editor (misma página)
-window.addEventListener("message", async (e) => {
-  if (!e.data) return;
-
-  if (e.data.type === "BANCO_ACTUALIZADO" || e.data.type === "ACTIVAR_TEST") {
-    console.log("Recargando banco por mensaje:", e.data.type);
-
-    if (window.cargarDesdeFirebase) {
-      banco = await window.cargarDesdeFirebase();
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(banco));
-    }
-
+window.addEventListener("message", (e) => {
+  if (e.data && e.data.type === "BANCO_ACTUALIZADO") {
+    // banco ya se sincroniza desde Firebase, solo repintar
     pintarCheckboxesTemas();
   }
 });

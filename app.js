@@ -19,13 +19,7 @@ function mostrarEditor() {
 // Mostrar Test
 function mostrarTest() {
   if (iframeEditor) iframeEditor.style.display = "none";
-  if (iframeTest) {
-    iframeTest.style.display = "block";
-
-    // Forzar recarga real sin caché
-    const srcActual = iframeTest.getAttribute("src").split("?")[0];
-    iframeTest.setAttribute("src", srcActual + "?t=" + Date.now());
-  }
+  if (iframeTest) iframeTest.style.display = "block";
 
   if (btnTest) btnTest.classList.add("activo");
   if (btnEditor) btnEditor.classList.remove("activo");

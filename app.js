@@ -23,6 +23,11 @@ function mostrarTest() {
 
   if (btnTest) btnTest.classList.add("activo");
   if (btnEditor) btnEditor.classList.remove("activo");
+
+  // Avisar al test que se active y recargue el banco
+  if (iframeTest && iframeTest.contentWindow) {
+    iframeTest.contentWindow.postMessage({ type: "ACTIVAR_TEST" }, "*");
+  }
 }
 
 // Estado inicial

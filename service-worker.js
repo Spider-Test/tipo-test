@@ -9,7 +9,6 @@ const FILES_TO_CACHE = [
   "./editor.js",
   "./test.js",
   "./firebase.js",
-  "./styles.css",
   "./manifest.json"
 ];
 

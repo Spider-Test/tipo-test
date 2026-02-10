@@ -63,11 +63,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       // Guardar copia local para modo offline
       localStorage.setItem(STORAGE_KEY, JSON.stringify(banco));
     } else {
-      banco = cargarBancoLocal();
-      console.log("Banco cargado desde localStorage");
+      throw new Error("Firebase no disponible");
     }
   } catch (e) {
-    console.log("Sin conexión, usando copia local");
+    console.log("Sin conexión o Firebase no disponible, usando copia local");
     banco = cargarBancoLocal();
   }
 

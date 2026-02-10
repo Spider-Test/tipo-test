@@ -538,9 +538,23 @@ function corregirTest() {
     }
 
     if (p.feedback) {
+      const btn = document.createElement("button");
+      btn.textContent = "Ver explicación";
+      btn.style.marginTop = "6px";
+      btn.style.fontSize = "12px";
+      btn.style.cursor = "pointer";
+
       const fb = document.createElement("div");
       fb.style.marginTop = "5px";
-      fb.innerHTML = `<em>Explicación:</em> ${p.feedback}`;
+      fb.style.whiteSpace = "pre-line";
+      fb.style.display = "none";
+      fb.innerHTML = `<em>Explicación:</em>\n${p.feedback}`;
+
+      btn.onclick = () => {
+        fb.style.display = fb.style.display === "none" ? "block" : "none";
+      };
+
+      div.appendChild(btn);
       div.appendChild(fb);
     }
   });
@@ -637,7 +651,14 @@ function mostrarResumen() {
       <div style="margin-top:6px;">
         ${renderizarOpcionesCorregidas(p)}
       </div>
-      ${p.feedback ? `<div style="margin-top:6px;"><em>${p.feedback}</em></div>` : ""}
+      ${p.feedback ? `
+        <button class="toggle-feedback" data-i="${idx}" style="margin-top:6px; font-size:12px; cursor:pointer;">
+          Ver explicación
+        </button>
+        <div class="feedback-${idx}" style="margin-top:6px; display:none; white-space:pre-line;">
+          <em>${p.feedback}</em>
+        </div>
+      ` : ""}
     `;
 
     // Clasificación
@@ -661,6 +682,17 @@ function mostrarResumen() {
 
   resumenNumerico.textContent =
     `Aciertos: ${aciertos} | Fallos: ${fallos} | En blanco: ${blancos}`;
+
+  // Activar botones de feedback
+  resumen.querySelectorAll(".toggle-feedback").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const i = btn.dataset.i;
+      const fb = resumen.querySelector(".feedback-" + i);
+      if (fb) {
+        fb.style.display = fb.style.display === "none" ? "block" : "none";
+      }
+    });
+  });
 }
 
 function toggleSeccion(tipo) {

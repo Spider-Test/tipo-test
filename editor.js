@@ -228,7 +228,12 @@ function mostrarPreguntas() {
           `<li ${idx === p.correcta ? 'style="font-weight:bold"' : ''}>${op}</li>`
         ).join("")}
       </ul>
-      ${p.feedback ? `<em>Feedback:</em> ${p.feedback}<br>` : ""}
+      ${p.feedback ? `
+        <button onclick="this.nextElementSibling.classList.toggle('abierto')">
+          Mostrar feedback
+        </button>
+        <div class="feedback-caja">${p.feedback}</div>
+      ` : ""}
       <button onclick="cargarParaEditar('${tema}', ${i})">Editar</button>
       <button onclick="borrarPregunta('${tema}', ${i})">Borrar</button>
     `;

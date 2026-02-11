@@ -205,12 +205,21 @@ body {
 <body>
 
 <h1>Editor de preguntas</h1>
-
+<details open>
+<summary style="font-size:18px; font-weight:600; margin:16px 0;">Añadir preguntas</summary>
+<div>
 <label>Tema:</label>
 <input type="text" id="tema" placeholder="Nuevo tema"><br><br>
 
+
 <label>O seleccionar tema existente:</label>
 <select id="temaExistente"></select><br><br>
+
+<label>Subtema nuevo:</label>
+<input type="text" id="subtemaPregunta" placeholder="Ej: Ventilación, Flashover, Bombas…"><br><br>
+
+<label>O seleccionar subtema existente:</label>
+<select id="subtemaExistente"></select><br><br>
 
 <label>Pregunta:</label>
 <textarea id="pregunta" rows="5"></textarea><br><br>
@@ -232,9 +241,14 @@ body {
   Cancelar edición
 </button>
 
+</div>
+</details>
 <hr>
 
-<h2>Preguntas guardadas</h2>
+<details>
+<summary style="font-size:18px; font-weight:600; margin:16px 0;">Editar preguntas</summary>
+<div>
+<label>Preguntas guardadas</label>
 
 <input
   type="text"
@@ -245,11 +259,21 @@ body {
 <div id="contadorResultados" style="font-size:13px; opacity:0.7; margin-bottom:10px;"></div>
 <label>Selecciona tema:</label><br>
 <select id="temaVista"></select>
+<br><br>
+<label>Selecciona subtema:</label><br>
+<select id="subtemaVista">
+  <option value="">Todos los subtemas</option>
+</select>
 
 <div id="listaPreguntas" class="lista-preguntas"></div>
 
+</div>
+</details>
 <hr>
 
+<details>
+<summary style="font-size:18px; font-weight:600; margin:16px 0;">Eliminar temas</summary>
+<div>
 <h2>Gestión de temas</h2>
 
 <label>Selecciona un tema para eliminar:</label><br>
@@ -260,8 +284,13 @@ body {
   Eliminar tema
 </button>
 
+</div>
+</details>
 <hr style="margin:20px 0;">
 
+<details>
+<summary style="font-size:18px; font-weight:600; margin:16px 0;">Renombrar temas</summary>
+<div>
 <h3>Renombrar tema</h3>
 
 <label>Selecciona tema:</label><br>
@@ -273,8 +302,9 @@ body {
 
 <button onclick="renombrarTema()">Guardar nombre</button>
 
+</div>
+</details>
 <hr>
-
 
 <!-- Sin JS inline: lógica del editor en editor.js -->
 <script>

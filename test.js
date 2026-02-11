@@ -117,11 +117,66 @@ function initTest() {
 
   const toggleSim = document.getElementById("simulacroToggle");
   const configSim = document.getElementById("simulacroConfig");
+  const repasoInt = document.getElementById("modoRepasoInteligente");
+  const repasoSimple = document.getElementById("modoRepasoSimple");
+  const soloNuevas = document.getElementById("soloNuevasToggle");
 
-  if (toggleSim && configSim) {
+  function desactivarOtrosModos(activo) {
+    const modos = [toggleSim, repasoInt, repasoSimple, soloNuevas];
+    modos.forEach(m => {
+      if (m && m !== activo) {
+        m.checked = false;
+      }
+    });
+
+    // Ajustes visuales específicos
+    if (configSim) {
+      configSim.style.display = toggleSim && toggleSim.checked ? "block" : "none";
+    }
+
+    const repasoOpc = document.getElementById("repasoOpciones");
+    if (repasoOpc) {
+      repasoOpc.style.display = repasoInt && repasoInt.checked ? "block" : "none";
+    }
+
+    modoSimulacro = toggleSim && toggleSim.checked;
+  }
+
+  if (toggleSim) {
     toggleSim.addEventListener("change", () => {
-      modoSimulacro = toggleSim.checked;
-      configSim.style.display = modoSimulacro ? "block" : "none";
+      if (toggleSim.checked) {
+        desactivarOtrosModos(toggleSim);
+      } else if (configSim) {
+        configSim.style.display = "none";
+        modoSimulacro = false;
+      }
+    });
+  }
+
+  if (repasoInt) {
+    repasoInt.addEventListener("change", () => {
+      if (repasoInt.checked) {
+        desactivarOtrosModos(repasoInt);
+      } else {
+        const repasoOpc = document.getElementById("repasoOpciones");
+        if (repasoOpc) repasoOpc.style.display = "none";
+      }
+    });
+  }
+
+  if (repasoSimple) {
+    repasoSimple.addEventListener("change", () => {
+      if (repasoSimple.checked) {
+        desactivarOtrosModos(repasoSimple);
+      }
+    });
+  }
+
+  if (soloNuevas) {
+    soloNuevas.addEventListener("change", () => {
+      if (soloNuevas.checked) {
+        desactivarOtrosModos(soloNuevas);
+      }
     });
   }
 
@@ -133,17 +188,20 @@ function initTest() {
     });
   }
 
-  // 🔄 Reset por tema: rellenar selector
-  const resetTemaSelect = document.getElementById("resetTemaSelect");
+  // 🔄 Reset por tema: rellenar selector (siempre después de cargar el banco)
+  const resetTemaSelect = document.getElementById("selectorTemaReset");
   if (resetTemaSelect) {
-    resetTemaSelect.innerHTML = '<option value="">— Selecciona un tema —</option>';
+    resetTemaSelect.innerHTML = '<option value="">Selecciona un tema</option>';
 
     Object.keys(banco).forEach(tema => {
       if (tema === "__falladas__") return;
 
+      const preguntas = banco[tema];
+      if (!Array.isArray(preguntas)) return;
+
       const opt = document.createElement("option");
       opt.value = tema;
-      opt.textContent = tema;
+      opt.textContent = `${tema} (${preguntas.length})`;
       resetTemaSelect.appendChild(opt);
     });
   }
@@ -201,26 +259,148 @@ function pintarCheckboxesTemas() {
       nuevas = banco[tema].filter(p => (p.fallada || 0) === 0).length;
     }
 
+    const bloqueTema = document.createElement("div");
+    bloqueTema.style.marginBottom = "6px";
+
     const label = document.createElement("label");
+    label.style.fontWeight = "600";
 
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
     checkbox.value = tema;
-    checkbox.addEventListener("change", actualizarEstadoBotonEmpezar);
+    checkbox.dataset.tipo = "tema";
+    checkbox.addEventListener("change", () => {
+      // Marcar o desmarcar todos los subtemas del mismo bloque
+      const subChecks = bloqueTema.querySelectorAll('input[data-tipo="subtema"]');
+      subChecks.forEach(sc => {
+        sc.checked = checkbox.checked;
+      });
+
+      actualizarEstadoBotonEmpezar();
+    });
 
     label.appendChild(checkbox);
 
     const texto = ` ${nombreVisible} (${contador})`;
-
     label.appendChild(document.createTextNode(texto));
 
-    contenedor.appendChild(label);
-    contenedor.appendChild(document.createElement("br"));
+    bloqueTema.appendChild(label);
+
+    // === Subtemas colapsables ===
+    if (tema !== "__falladas__" && Array.isArray(banco[tema])) {
+      const subtemas = [...new Set(banco[tema].map(p => p.subtema || "General"))];
+
+      if (subtemas.length > 0) {
+        // Botón de colapsar/expandir
+        const toggleBtn = document.createElement("button");
+        toggleBtn.textContent = "▸";
+        toggleBtn.style.marginLeft = "6px";
+        toggleBtn.style.fontSize = "12px";
+        toggleBtn.style.padding = "2px 6px";
+        toggleBtn.style.cursor = "pointer";
+
+        label.appendChild(toggleBtn);
+
+        const contSub = document.createElement("div");
+        contSub.style.marginLeft = "18px";
+        contSub.style.marginTop = "4px";
+        contSub.style.display = "none"; // colapsado por defecto
+
+        toggleBtn.onclick = () => {
+          const abierto = contSub.style.display === "block";
+          contSub.style.display = abierto ? "none" : "block";
+          toggleBtn.textContent = abierto ? "▸" : "▾";
+        };
+
+        subtemas.forEach(sub => {
+          const subLabel = document.createElement("label");
+          subLabel.style.display = "block";
+          subLabel.style.fontWeight = "400";
+
+          const subCb = document.createElement("input");
+          subCb.type = "checkbox";
+          subCb.value = tema + "||" + sub;
+          subCb.dataset.tipo = "subtema";
+          subCb.addEventListener("change", () => {
+            const subChecks = contSub.querySelectorAll('input[data-tipo="subtema"]');
+            const algunoMarcado = Array.from(subChecks).some(sc => sc.checked);
+            checkbox.checked = algunoMarcado;
+
+            actualizarEstadoBotonEmpezar();
+          });
+
+          subLabel.appendChild(subCb);
+          subLabel.appendChild(document.createTextNode(" " + sub));
+
+          contSub.appendChild(subLabel);
+        });
+
+        bloqueTema.appendChild(contSub);
+      }
+    }
+
+    contenedor.appendChild(bloqueTema);
   });
   actualizarEstadoBotonEmpezar();
 }
 
+
+// ====== NUEVAS FUNCIONES DE NAVEGACIÓN DE PANTALLA ======
+function mostrarPantallaInicial() {
+  const pantalla = document.getElementById("pantallaSeleccion");
+  const pantallaTemas = document.getElementById("pantallaTemas");
+  const zonaTest = document.getElementById("zonaTest");
+  const resumen = document.getElementById("resumenTest");
+
+  if (pantalla) {
+    pantalla.style.display = "flex";
+    pantalla.classList.add("inicio");
+  }
+  if (pantallaTemas) pantallaTemas.style.display = "none";
+  if (zonaTest) zonaTest.style.display = "none";
+  if (resumen) resumen.style.display = "none";
+
+  ocultarCronometro();
+}
+
+function mostrarPantallaTemas() {
+  const pantallaSeleccion = document.getElementById("pantallaSeleccion");
+  const contTemas = document.getElementById("pantallaTemas");
+
+  if (pantallaSeleccion) {
+    pantallaSeleccion.style.display = "none";
+    pantallaSeleccion.classList.remove("inicio");
+  }
+
+  if (contTemas) {
+    contTemas.style.display = "flex";
+    contTemas.classList.add("inicio");
+  }
+}
+
 function iniciarTest() {
+  // Primera pantalla → segunda pantalla (temas)
+  const numInput = document.getElementById("numPreguntas");
+  const num = parseInt(numInput?.value);
+
+  if (!modoSimulacro && (isNaN(num) || num <= 0)) {
+    alert("Selecciona un número de preguntas válido");
+    return;
+  }
+
+  // Guardar configuración básica
+  ultimaConfiguracionTest = {
+    num: num,
+    modoSimulacro: modoSimulacro
+  };
+
+  // Mostrar pantalla de temas
+  mostrarPantallaTemas();
+}
+
+function iniciarTestReal() {
+  const pantallaTemas = document.getElementById("pantallaTemas");
+  if (pantallaTemas) pantallaTemas.style.display = "none";
   // Limpieza defensiva de texto residual / debug
   document.querySelectorAll(".debug, .texto-debug").forEach(e => e.remove());
 
@@ -235,17 +415,7 @@ function iniciarTest() {
   // 🚨 Si no hay temas, NO tocar la interfaz
   if (temasSeleccionados.length === 0) {
     alert("Selecciona al menos un tema");
-
-    const zonaTest = document.getElementById("zonaTest");
-    if (zonaTest) {
-      zonaTest.innerHTML = "";
-      zonaTest.style.display = "none";
-    }
-
-    const pantallaSeleccion = document.getElementById("pantallaSeleccion");
-    if (pantallaSeleccion) pantallaSeleccion.style.display = "block";
-
-    ocultarCronometro();
+    mostrarPantallaInicial();
     return;
   }
 
@@ -371,51 +541,105 @@ function iniciarTest() {
   let poolPreguntas = [];
   let num = parseInt(document.getElementById("numPreguntas").value);
 
-  const repasoActivo = document.getElementById("modoRepasoInteligente")?.checked;
-  const repasoTipo = document.querySelector("input[name='repasoTipo']:checked")?.value || "global";
+  const repasoSimpleActivo = document.getElementById("modoRepasoSimple")?.checked;
 
-  // Construir pool base por temas seleccionados
-  temasSeleccionados.forEach(t => {
-    if (banco[t]) {
-      poolPreguntas = poolPreguntas.concat(banco[t]);
-    }
-  });
+  // Si el modo repaso simple está activo, forzar desactivación de los otros modos
+  let repasoActivo = document.getElementById("modoRepasoInteligente")?.checked;
+  let soloNuevasActivo = document.getElementById("soloNuevasToggle")?.checked;
 
-  // Filtro: solo preguntas nuevas (sin fallos)
-  const soloNuevasActivo = document.getElementById("soloNuevasToggle")?.checked;
-  if (soloNuevasActivo) {
-    poolPreguntas = poolPreguntas.filter(p => (p.fallada || 0) === 0);
+  if (repasoSimpleActivo) {
+    repasoActivo = false;
+    soloNuevasActivo = false;
   }
 
-  if (repasoActivo) {
-    let falladas = [];
-    let nuevas = [];
+  // Construir pool base SOLO con los temas y subtemas seleccionados
+  temasSeleccionados.forEach(sel => {
+    const tema = sel.tema;
+    const subtema = sel.subtema;
 
-    if (repasoTipo === "global") {
-      // Todas las falladas del banco
-      Object.keys(banco).forEach(tema => {
-        if (tema === "__falladas__") return;
-        banco[tema].forEach(p => {
-          if ((p.fallada || 0) > 0) falladas.push(p);
-          else nuevas.push(p);
-        });
+    const preguntasTema = banco[tema];
+    if (!Array.isArray(preguntasTema)) return;
+
+    if (!subtema) {
+      // Tema completo
+      preguntasTema.forEach(p => {
+        poolPreguntas.push(p);
       });
     } else {
-      // Solo falladas de los temas seleccionados
-      temasSeleccionados.forEach(t => {
-        if (banco[t]) {
-          banco[t].forEach(p => {
-            if ((p.fallada || 0) > 0) falladas.push(p);
-            else nuevas.push(p);
-          });
+      // Solo subtema específico
+      preguntasTema.forEach(p => {
+        const sub = p.subtema || "General";
+        if (sub === subtema) {
+          poolPreguntas.push(p);
         }
       });
     }
+  });
+
+  // Seguridad: si no hay preguntas tras el filtro, salir
+  if (poolPreguntas.length === 0) {
+    alert("No hay preguntas en los temas seleccionados");
+    mostrarPantallaInicial();
+    return;
+  }
+
+  // Filtro: solo preguntas nuevas (sin fallos)
+  if (soloNuevasActivo) {
+    poolPreguntas = poolPreguntas.filter(p => (p.fallada || 0) === 0);
+
+    // Si no quedan preguntas tras el filtro, volver a la pantalla inicial
+    if (poolPreguntas.length === 0) {
+      alert("No hay preguntas nuevas en los temas seleccionados");
+      mostrarPantallaInicial();
+      return;
+    }
+  }
+
+  // --- Modo repaso simple ---
+  if (repasoSimpleActivo) {
+    if (isNaN(num) || num <= 0) {
+      num = poolPreguntas.length;
+    }
+
+    if (poolPreguntas.length === 0) {
+      alert("No hay preguntas en los temas seleccionados");
+      return;
+    }
+
+    preguntasTest = poolPreguntas
+      .sort(() => Math.random() - 0.5)
+      .slice(0, num);
+  } else if (repasoActivo) {
+    let falladas = [];
+    let nuevas = [];
+
+    // Solo falladas y nuevas de los temas y subtemas seleccionados
+    temasSeleccionados.forEach(sel => {
+      const tema = sel.tema;
+      const subtema = sel.subtema;
+
+      const preguntasTema = banco[tema];
+      if (!Array.isArray(preguntasTema)) return;
+
+      preguntasTema.forEach(p => {
+        const sub = p.subtema || "General";
+
+        // Si hay subtema seleccionado, filtrar
+        if (subtema && sub !== subtema) return;
+
+        if ((p.fallada || 0) > 0) {
+          falladas.push(p);
+        } else {
+          nuevas.push(p);
+        }
+      });
+    });
 
     if (isNaN(num) || num <= 0) {
       num = falladas.length + nuevas.length;
     }
 
+    // 70% falladas, 30% nuevas
     const numFalladas = Math.round(num * 0.7);
     const numNuevas = num - numFalladas;
 
@@ -436,7 +660,6 @@ function iniciarTest() {
     }
 
     if (modoSimulacro) {
-      const numSim = parseInt(document.getElementById("numPreguntasSimulacro")?.value);
       const tipoOpciones = document.getElementById("tipoOpcionesSimulacro")?.value;
 
       let poolSimulacro = poolPreguntas;
@@ -450,10 +673,14 @@ function iniciarTest() {
 
       if (poolSimulacro.length === 0) {
         alert("No hay preguntas con ese tipo de respuestas en los temas seleccionados");
+        mostrarPantallaInicial();
         return;
       }
 
-      const total = (isNaN(numSim) || numSim <= 0) ? poolSimulacro.length : numSim;
+      // Usar el número general de preguntas
+      const total = (isNaN(num) || num <= 0)
+        ? poolSimulacro.length
+        : num;
 
       preguntasTest = poolSimulacro
         .sort(() => Math.random() - 0.5)
@@ -471,6 +698,12 @@ function iniciarTest() {
   preguntasTest.forEach(p => {
     fallosSesionAntes += p.fallada || 0;
   });
+
+  if (!preguntasTest || preguntasTest.length === 0) {
+    alert("No hay preguntas que coincidan con esa configuración.");
+    mostrarPantallaInicial();
+    return;
+  }
 
   preguntasTest.forEach((p, i) => {
     zonaTest.appendChild(crearBloquePregunta(p, i));
@@ -609,9 +842,25 @@ function corregirTest() {
 }
 
 function obtenerTemasSeleccionados() {
-  return Array.from(
+  const checks = Array.from(
     document.querySelectorAll("#temasCheckboxes input:checked")
-  ).map(el => el.value);
+  );
+
+  const resultado = [];
+
+  checks.forEach(el => {
+    const tipo = el.dataset.tipo;
+    const valor = el.value;
+
+    if (tipo === "tema") {
+      resultado.push({ tema: valor, subtema: null });
+    } else if (tipo === "subtema") {
+      const [tema, subtema] = valor.split("||");
+      resultado.push({ tema, subtema });
+    }
+  });
+
+  return resultado;
 }
 
 function seleccionarTodos() {
@@ -649,6 +898,8 @@ function mostrarResumen() {
   let aciertos = 0;
   let fallos = 0;
   let blancos = 0;
+  let totalPreguntas = preguntasTest.length;
+  let tipoRespuestas = 4; // por defecto
 
   preguntasTest.forEach((p, idx) => {
     const div = document.createElement("div");
@@ -688,8 +939,40 @@ function mostrarResumen() {
     }
   });
 
-  resumenNumerico.textContent =
-    `Aciertos: ${aciertos} | Fallos: ${fallos} | En blanco: ${blancos}`;
+  // Detectar tipo de respuestas (3 o 4)
+  if (preguntasTest.length > 0) {
+    tipoRespuestas = preguntasTest[0].opciones.length;
+  }
+
+  // Calcular penalización
+  let penalizacion = 0;
+  if (tipoRespuestas === 4) {
+    penalizacion = fallos * 0.25; // cada 4 mal = -1
+  } else if (tipoRespuestas === 3) {
+    penalizacion = fallos * (1/3); // cada 3 mal = -1
+  }
+
+  // Puntuación bruta
+  let puntuacionNeta = aciertos - penalizacion;
+  if (puntuacionNeta < 0) puntuacionNeta = 0;
+
+  // Escala de 0 a 10
+  let nota = 0;
+  if (totalPreguntas > 0) {
+    nota = (puntuacionNeta / totalPreguntas) * 10;
+  }
+
+  // Limitar a 3 decimales
+  nota = Math.max(0, Math.min(10, nota));
+  const notaTexto = nota.toFixed(3);
+
+  resumenNumerico.innerHTML = `
+    Aciertos: ${aciertos} | Fallos: ${fallos} | En blanco: ${blancos}
+    <br>
+    <strong style="color:${nota < 5 ? 'red' : 'var(--accent-success)'};">
+      Nota final: ${notaTexto} / 10
+    </strong>
+  `;
 
   // Mostrar GIF de pleno de aciertos
   const gif = document.getElementById("gifPerfecto");
@@ -847,7 +1130,7 @@ function resetearFallosPorTema() {
   let tema = null;
 
   // Prioridad: selector específico si existe
-  const select = document.getElementById("resetTemaSelect");
+  const select = document.getElementById("selectorTemaReset");
   if (select && select.value) {
     tema = select.value;
   } else {
@@ -963,9 +1246,9 @@ function ocultarResumen() {
 /* ===== CAPA G2: VOLVER A SELECCIÓN ===== */
 
 function volverASeleccion() {
-  const pantallaSeleccion = document.getElementById("pantallaSeleccion");
   const zonaTest = document.getElementById("zonaTest");
   const resumen = document.getElementById("resumenTest");
+  const corregirBtn = document.getElementById("corregirBtn");
 
   if (zonaTest) {
     zonaTest.classList.remove("fade-in");
@@ -973,28 +1256,16 @@ function volverASeleccion() {
   }
 
   if (resumen) resumen.style.display = "none";
+  if (corregirBtn) corregirBtn.style.display = "none";
 
-  if (pantallaSeleccion) {
-    // Limpiar cualquier estado visual previo
-    pantallaSeleccion.classList.remove("fade-in");
-    pantallaSeleccion.classList.remove("fade-out");
-
-    // Restaurar pantalla inicial correctamente centrada
-    pantallaSeleccion.style.display = "flex";
-    pantallaSeleccion.classList.add("inicio");
-  }
+  // Restaurar pantalla inicial centrada
+  mostrarPantallaInicial();
 
   ocultarCronometro();
-
-  const corregirBtn = document.getElementById("corregirBtn");
-  if (corregirBtn) corregirBtn.style.display = "none";
 
   if (typeof cargarTemas === "function") {
     cargarTemas();
   }
-
-  const contTemas = document.getElementById("temasCheckboxes");
-  if (contTemas) contTemas.style.display = "block";
 }
 // CAMBIO 4: Mostrar el progreso en el resumen de sesión
 function actualizarProgresoSesion() {
@@ -1088,19 +1359,26 @@ function actualizarEstadoBotonEmpezar() {
   const btn = document.getElementById("btnEmpezarTest");
   if (!btn) return;
 
-  const temasSeleccionados = obtenerTemasSeleccionados();
-  const habilitado = temasSeleccionados.length > 0;
+  // Comprobar si hay algún modo activo
+  const simulacro = document.getElementById("simulacroToggle")?.checked;
+  const repasoInt = document.getElementById("modoRepasoInteligente")?.checked;
+  const repasoSimple = document.getElementById("modoRepasoSimple")?.checked;
+  const soloNuevas = document.getElementById("soloNuevasToggle")?.checked;
 
-  btn.disabled = !habilitado;
-  btn.classList.toggle("btn-disabled", !habilitado);
+  const hayModoActivo = simulacro || repasoInt || repasoSimple || soloNuevas;
 
-  if (!habilitado) {
+  btn.disabled = !hayModoActivo;
+  btn.classList.toggle("btn-disabled", !hayModoActivo);
+
+  if (!hayModoActivo) {
     btn.style.pointerEvents = "none";
   } else {
     btn.style.pointerEvents = "auto";
   }
+
   const tooltip = document.getElementById("tooltipEmpezar");
   if (tooltip) {
-    tooltip.style.display = habilitado ? "none" : "block";
+    tooltip.textContent = "Selecciona un modo para comenzar";
+    tooltip.style.display = hayModoActivo ? "none" : "block";
   }
 }

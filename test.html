@@ -416,6 +416,10 @@ button[onclick*="blanco"] {
       opacity: 1;
       transform: translateX(-50%) translateY(0);
     }
+    .tooltip-wrapper:hover #btnGenerarTest:disabled + .tooltip-text {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
 
     .tooltip-wrapper:hover .tooltip-text {
       transition-delay: 0.05s;
@@ -439,6 +443,15 @@ button[onclick*="blanco"] {
       transform: scale(0.98);
     }
 
+    #btnGenerarTest:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      color: var(--accent-muted);
+      background: var(--bg-card);
+      transform: scale(0.98);
+      filter: grayscale(0.4);
+    }
+
     #btnEmpezarTest:not(:disabled) {
       opacity: 1;
       transform: scale(1);
@@ -448,7 +461,7 @@ button[onclick*="blanco"] {
       transform: scale(0.96);
     }
 
-    #pantallaSeleccion.inicio {
+    .pantalla-centro {
       min-height: calc(100vh - 60px);
       display: flex;
       flex-direction: column;
@@ -458,7 +471,7 @@ button[onclick*="blanco"] {
       text-align: center;
     }
 
-    #pantallaSeleccion.inicio > * {
+    .pantalla-centro > * {
       width: 100%;
       max-width: 520px;
       margin-left: auto;
@@ -496,7 +509,7 @@ button[onclick*="blanco"] {
 </head>
 <body>
 
-<div id="pantallaSeleccion" class="inicio">
+<div id="pantallaSeleccion" class="pantalla-centro">
 
 <h1>Realizar test</h1>
 
@@ -528,16 +541,6 @@ button[onclick*="blanco"] {
       value="60"
     >
 
-    <label for="numPreguntasSimulacro" style="margin-top:10px;">
-      Nº de preguntas del simulacro
-    </label>
-    <input
-      type="number"
-      id="numPreguntasSimulacro"
-      min="1"
-      step="1"
-      value="40"
-    >
 
     <label for="tipoOpcionesSimulacro" style="margin-top:10px;">
       Tipo de respuestas
@@ -557,14 +560,6 @@ button[onclick*="blanco"] {
     </select>
   </div>
 
-  <p style="
-    font-size:12px;
-    color: var(--accent-muted);
-    margin-top:6px;
-    line-height:1.4;
-  ">
-    Simula un examen real con tiempo limitado, número fijo de preguntas y tipo de respuestas definido. Las preguntas se toman únicamente de los temas que selecciones abajo.
-  </p>
 
   <hr style="margin:14px 0; border:none; border-top:1px solid var(--border-main);">
 
@@ -577,24 +572,21 @@ button[onclick*="blanco"] {
     </label>
   </div>
 
-  <div id="repasoOpciones" style="display:none; margin-top:10px;">
-    <label style="display:block; font-size:13px;">
-      <input type="radio" name="repasoTipo" value="global" checked>
-      Repaso global (todas las falladas)
-    </label>
-    <label style="display:block; font-size:13px;">
-      <input type="radio" name="repasoTipo" value="porTema">
-      Solo falladas de los temas seleccionados
+  <!-- Mezcla automática info insertada aquí -->
+  <div style="font-size:13px; margin-top:10px; color:var(--accent-muted);">
+    Mezcla automática: 70% preguntas falladas y 30% preguntas nuevas de los temas seleccionados.
+  </div>
+
+  <hr style="margin:14px 0; border:none; border-top:1px solid var(--border-main);">
+
+  <!-- Modo repaso simple -->
+  <div style="display:flex; align-items:center; justify-content:space-between;">
+    <span style="font-weight:600;">Modo repaso</span>
+    <label class="ios-switch">
+      <input type="checkbox" id="modoRepasoSimple">
+      <span class="slider"></span>
     </label>
   </div>
-  <p style="
-    font-size:12px;
-    color: var(--accent-muted);
-    margin-top:6px;
-    line-height:1.4;
-  ">
-    Mezcla automáticamente preguntas falladas y nuevas para reforzar tus errores sin dejar de avanzar en el temario. Las preguntas se toman únicamente de los temas que selecciones abajo.
-  </p>
 
   <hr style="margin:14px 0; border:none; border-top:1px solid var(--border-main);">
 
@@ -619,57 +611,51 @@ button[onclick*="blanco"] {
 
 </div>
 
-<h3>Temas</h3>
-<div class="bloque-reset" style="flex-direction:column; align-items:center;">
+<div style="margin-top:16px; text-align:center;">
+  <label>Nº de preguntas:</label>
+  <input type="number" id="numPreguntas" min="1">
+</div>
+
+<div style="margin-top:18px; text-align:center;">
+  <div class="tooltip-wrapper">
+    <button id="btnGenerarTest" onclick="iniciarTest()" disabled>
+      Generar test
+    </button>
+    <div class="tooltip-text">
+      Selecciona un modo para continuar
+    </div>
+  </div>
+</div>
+
+<div class="bloque-reset" style="flex-direction:column; align-items:center; margin-top:18px;">
   <button onclick="restablecerFalladas()" style="font-size:12px; padding:4px 10px;">
     Restablecer todas las estadísticas
   </button>
 
-  <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
-    <button onclick="restablecerTema()" style="font-size:12px; padding:4px 10px;">
-      Restablecer estadísticas del tema
-    </button>
-    <small style="opacity:0.7; font-size:11px; text-align:center;">
-      Se aplicará a los temas seleccionados abajo
-    </small>
-  </div>
-</div>
-<button id="btnRefrescarTest" style="
-  font-size:11px;
-  padding:3px 8px;
-  border-radius:999px;
-  border:1px solid var(--border-main);
-  background:var(--bg-card);
-  color:var(--accent-primary);
-  font-weight:600;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap:3px;
-  margin:6px auto 10px auto;
-  max-width:110px;
-">
-  ⟳ Refrescar
-</button>
-<div id="temasCheckboxes"></div>
+  <button onclick="restablecerTema()" style="font-size:12px; padding:4px 10px; margin-top:6px;">
+    Restablecer tema seleccionado
+  </button>
 
-<button onclick="seleccionarTodos()">Seleccionar todos</button>
-<button onclick="limpiarSeleccion()">Limpiar selección</button>
-
-
-<label>Nº de preguntas:</label>
-<input type="number" id="numPreguntas" min="1">
-
-
-
-
-<div class="tooltip-wrapper" style="display:flex; justify-content:center;">
-  <button id="btnEmpezarTest" onclick="iniciarTest()">Empezar test</button>
-  <div class="tooltip-text" id="tooltipEmpezar">
-    Selecciona al menos un tema para comenzar
-  </div>
+  <select id="selectorTemaReset" style="padding:4px 8px; border-radius:6px; margin-top:6px;">
+    <option value="">Selecciona un tema</option>
+  </select>
 </div>
 
+</div>
+
+<div id="pantallaTemas" class="pantalla-centro" style="display:none;">
+  <h2>Selecciona los temas</h2>
+
+  <div id="temasCheckboxes"></div>
+
+  <div style="margin-top:14px;">
+    <button onclick="seleccionarTodos()">Seleccionar todos</button>
+    <button onclick="limpiarSeleccion()">Limpiar selección</button>
+  </div>
+
+  <div style="margin-top:18px;">
+    <button id="btnEmpezarTest" onclick="iniciarTestReal()">Empezar test</button>
+  </div>
 </div>
 
 <div id="cronometro">
@@ -767,6 +753,26 @@ button[onclick*="blanco"] {
       checks.forEach(ch => ch.checked = selectAll.checked);
     });
   }
+</script>
+<script>
+  const btnGenerar = document.getElementById("btnGenerarTest");
+  const modos = [
+    document.getElementById("simulacroToggle"),
+    document.getElementById("modoRepasoInteligente"),
+    document.getElementById("modoRepasoSimple"),
+    document.getElementById("soloNuevasToggle")
+  ].filter(Boolean);
+
+  function actualizarEstadoBotonGenerar() {
+    const algunModoActivo = modos.some(m => m.checked);
+    btnGenerar.disabled = !algunModoActivo;
+  }
+
+  modos.forEach(modo => {
+    modo.addEventListener("change", actualizarEstadoBotonGenerar);
+  });
+
+  actualizarEstadoBotonGenerar();
 </script>
 <!-- Lógica del test gestionada íntegramente en test.js -->
 <script type="module" src="firebase.js"></script>

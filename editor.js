@@ -63,6 +63,20 @@ function initEditor() {
         cargarTemasExistentes();
         cargarSelectEliminar();
         cargarSelectRenombrar();
+        // === NUEVO BLOQUE AGREGADO ===
+        const temaVista = document.getElementById("temaVista");
+        const subtemaVista = document.getElementById("subtemaVista");
+
+        if (temaVista) {
+          temaVista.addEventListener("change", () => {
+            cargarSubtemasVista();
+            mostrarPreguntas();
+          });
+        }
+
+        if (subtemaVista) {
+          subtemaVista.addEventListener("change", mostrarPreguntas);
+        }
       });
   } else {
     banco = cargarBanco();
@@ -72,6 +86,20 @@ function initEditor() {
     cargarTemasExistentes();
     cargarSelectEliminar();
     cargarSelectRenombrar();
+    // === NUEVO BLOQUE AGREGADO ===
+    const temaVista = document.getElementById("temaVista");
+    const subtemaVista = document.getElementById("subtemaVista");
+
+    if (temaVista) {
+      temaVista.addEventListener("change", () => {
+        cargarSubtemasVista();
+        mostrarPreguntas();
+      });
+    }
+
+    if (subtemaVista) {
+      subtemaVista.addEventListener("change", mostrarPreguntas);
+    }
   }
   prepararValidacionFormulario();
   const buscador = document.getElementById("buscadorPreguntas");
@@ -85,6 +113,7 @@ function initEditor() {
   prepararValidacionBorrado();
   validarBorradoTema();
   document.getElementById("temaExistente")?.addEventListener("change", controlarInputTema);
+  document.getElementById("temaExistente")?.addEventListener("change", cargarSubtemasPorTema);
 
   // ===== EXPORTAR / IMPORTAR BANCO =====
   const btnExportar = document.getElementById("btnExportarBanco");
@@ -153,6 +182,15 @@ function initEditor() {
 /* ====== CREAR / EDITAR PREGUNTA ====== */
 function guardarPregunta() {
   const tema = document.getElementById("tema").value.trim();
+  const subtemaInput = document.getElementById("subtemaPregunta")?.value.trim();
+  const subtemaSelect = document.getElementById("subtemaExistente");
+  let subtema = "General";
+
+  if (subtemaInput) {
+    subtema = subtemaInput;
+  } else if (subtemaSelect && subtemaSelect.value) {
+    subtema = subtemaSelect.value;
+  }
   if (!tema) {
     alert("El tema no puede estar vacío");
     return;
@@ -184,6 +222,7 @@ function guardarPregunta() {
       correcta,
       fallada: original.fallada || 0,
       feedback,
+      subtema: original.subtema || subtema,
       id: original.id
     };
 
@@ -208,21 +247,24 @@ function guardarPregunta() {
       opciones,
       correcta,
       fallada: 0,
-      feedback
+      feedback,
+      subtema
     });
   }
 
   guardarBanco();
-if (window.guardarEnFirebase) {
-  window.guardarEnFirebase({
-    tema,
-    pregunta,
-    opciones,
-    correcta,
-    feedback,
-    fecha: Date.now()
-  });
-}
+  if (window.crearBackupAutomatico) window.crearBackupAutomatico(banco);
+  if (window.guardarEnFirebase) {
+    window.guardarEnFirebase({
+      tema,
+      subtema,
+      pregunta,
+      opciones,
+      correcta,
+      feedback,
+      fecha: Date.now()
+    });
+  }
   // 🔄 Avisar al test que el banco ha cambiado
   if (window.parent) {
     window.parent.postMessage({ type: "BANCO_ACTUALIZADO" }, "*");
@@ -247,7 +289,11 @@ function cargarTemasVista() {
     select.appendChild(opt);
   });
 
-  select.onchange = mostrarPreguntas;
+  select.onchange = () => {
+    cargarSubtemasVista();
+    mostrarPreguntas();
+  };
+  cargarSubtemasVista();
   mostrarPreguntas();
 }
 
@@ -257,11 +303,16 @@ function mostrarPreguntas() {
   if (!select || !contenedor) return;
 
   const tema = select.value;
+  const selectSubtema = document.getElementById("subtemaVista");
+  const subtemaSeleccionado = selectSubtema ? selectSubtema.value : "";
   contenedor.innerHTML = "";
   contadorResultados = 0;
   if (!tema || !banco[tema]) return;
 
   banco[tema].forEach((p, i) => {
+    if (subtemaSeleccionado && (p.subtema || "General") !== subtemaSeleccionado) {
+      return;
+    }
     let coincide = false;
 
     if (textoBusqueda) {
@@ -291,6 +342,9 @@ function mostrarPreguntas() {
     div.style.margin = "8px 0";
 
     div.innerHTML = `
+      <div style="font-size:12px; opacity:0.7; margin-bottom:4px;">
+        ${tema} → ${p.subtema || "General"}
+      </div>
       <strong>${i + 1}. ${resaltarTexto(p.pregunta, textoBusqueda)}</strong><br>
       <ul>
         ${p.opciones.map((op, idx) =>
@@ -355,6 +409,7 @@ function borrarPregunta(tema, index) {
   if (banco[tema].length === 0) delete banco[tema];
 
   guardarBanco();
+  if (window.crearBackupAutomatico) window.crearBackupAutomatico(banco);
   limpiarTemasVacios();
   cargarTemasVista();
   cargarTemasExistentes();
@@ -468,6 +523,7 @@ function borrarTemaComun(selectId) {
 
   delete banco[tema];
   guardarBanco();
+  if (window.crearBackupAutomatico) window.crearBackupAutomatico(banco);
 
   limpiarFormulario();
   limpiarTemasVacios();
@@ -656,6 +712,7 @@ function renombrarTema() {
   }
 
   guardarBanco();
+  if (window.crearBackupAutomatico) window.crearBackupAutomatico(banco);
   cargarTemasVista();
   cargarTemasExistentes();
   cargarSelectEliminar();
@@ -680,6 +737,31 @@ function cargarSelectRenombrar() {
     select.appendChild(opt);
   });
 }
+// ====== SUBTEMAS POR TEMA ======
+function cargarSubtemasPorTema() {
+  const selectTema = document.getElementById("temaExistente");
+  const selectSubtema = document.getElementById("subtemaExistente");
+
+  if (!selectTema || !selectSubtema) return;
+
+  const tema = selectTema.value;
+  selectSubtema.innerHTML = "<option value=''>-- seleccionar subtema --</option>";
+
+  if (!tema || !banco[tema]) return;
+
+  const subtemas = new Set();
+  banco[tema].forEach(p => {
+    if (p.subtema) subtemas.add(p.subtema);
+  });
+
+  subtemas.forEach(st => {
+    const opt = document.createElement("option");
+    opt.value = st;
+    opt.textContent = st;
+    selectSubtema.appendChild(opt);
+  });
+}
+ 
 // ====== CANCELAR EDICIÓN ======
 document.addEventListener("DOMContentLoaded", () => {
   const btnCancelar = document.getElementById("btnCancelarEdicion");
@@ -690,3 +772,29 @@ document.addEventListener("DOMContentLoaded", () => {
     limpiarFormulario();
   });
 });
+// ====== SUBTEMAS EN VISTA AVANZADA ======
+function cargarSubtemasVista() {
+  const selectTema = document.getElementById("temaVista");
+  const selectSubtema = document.getElementById("subtemaVista");
+
+  if (!selectTema || !selectSubtema) return;
+
+  const tema = selectTema.value;
+  selectSubtema.innerHTML = "<option value=''>Todos los subtemas</option>";
+
+  if (!tema || !banco[tema]) return;
+
+  const subtemas = new Set();
+  banco[tema].forEach(p => {
+    subtemas.add(p.subtema || "General");
+  });
+
+  subtemas.forEach(st => {
+    const opt = document.createElement("option");
+    opt.value = st;
+    opt.textContent = st;
+    selectSubtema.appendChild(opt);
+  });
+
+  selectSubtema.onchange = mostrarPreguntas;
+}

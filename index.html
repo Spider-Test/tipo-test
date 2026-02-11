@@ -197,7 +197,8 @@
     };
 
     btnLogin.onclick = async () => {
-      await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+      actualizarPanelAdmin(result.user);
     };
 
     const loginScreen = document.getElementById("loginScreen");
@@ -206,6 +207,22 @@
     const linkAdmin = document.getElementById("linkAdmin");
     const linkSalirAdmin = document.getElementById("linkSalirAdmin");
 
+    function actualizarPanelAdmin(user) {
+      if (!user) {
+        if (linkAdmin) linkAdmin.style.display = "none";
+        if (linkSalirAdmin) linkSalirAdmin.style.display = "none";
+        return;
+      }
+
+      if (user.email === ADMIN_EMAIL) {
+        if (linkAdmin) linkAdmin.style.display = "inline-block";
+        if (linkSalirAdmin) linkSalirAdmin.style.display = "inline-block";
+      } else {
+        if (linkAdmin) linkAdmin.style.display = "none";
+        if (linkSalirAdmin) linkSalirAdmin.style.display = "none";
+      }
+    }
+
     onAuthStateChanged(auth, user => {
       if (user) {
         userInfo.textContent = "👤 " + user.displayName;
@@ -213,18 +230,15 @@
         loginScreen.style.display = "none";
         btnLogout.style.display = "inline-block";
 
-        if (linkAdmin && user.email === ADMIN_EMAIL) {
-          linkAdmin.style.display = "inline-block";
-          if (linkSalirAdmin) linkSalirAdmin.style.display = "inline-block";
-        }
+        actualizarPanelAdmin(user);
+
       } else {
         userInfo.textContent = "";
         window.currentUser = null;
         loginScreen.style.display = "flex";
         btnLogout.style.display = "none";
 
-        if (linkAdmin) linkAdmin.style.display = "none";
-        if (linkSalirAdmin) linkSalirAdmin.style.display = "none";
+        actualizarPanelAdmin(null);
       }
     });
 

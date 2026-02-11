@@ -63,27 +63,6 @@ export async function cargarDesdeFirebase() {
     }
   }
 }
-  const snapshot = await getDocs(collection(db, "preguntas"));
-  const banco = {};
-
-  snapshot.forEach(docSnap => {
-    const data = docSnap.data();
-    const id = docSnap.id;
-
-    if (!banco[data.tema]) banco[data.tema] = [];
-
-    banco[data.tema].push({
-      id,
-      pregunta: data.pregunta,
-      opciones: data.opciones,
-      correcta: data.correcta,
-      fallada: data.fallada || 0,
-      feedback: data.feedback || ""
-    });
-  });
-
-  return banco;
-}
 
 export async function actualizarFallada(id, nuevoValor) {
   try {

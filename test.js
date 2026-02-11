@@ -1054,9 +1054,20 @@ function actualizarPreguntaFallada(pregunta, acertada) {
 }
 
 function seleccionarPreguntasPonderadas(preguntas, num) {
-  let pool = [];
-
+  // Eliminar duplicados reales antes de ponderar
+  const mapaUnico = new Map();
   preguntas.forEach(p => {
+    const clave = p.id || p.pregunta;
+    if (!mapaUnico.has(clave)) {
+      mapaUnico.set(clave, p);
+    }
+  });
+
+  const preguntasUnicas = Array.from(mapaUnico.values());
+
+  // Crear pool ponderado
+  let pool = [];
+  preguntasUnicas.forEach(p => {
     const peso = 1 + (p.fallada || 0);
     for (let i = 0; i < peso; i++) {
       pool.push(p);
@@ -1066,11 +1077,15 @@ function seleccionarPreguntasPonderadas(preguntas, num) {
   // Mezclar
   pool.sort(() => Math.random() - 0.5);
 
-  // Seleccionar sin duplicados
+  // Seleccionar sin repetir
   const seleccionadas = [];
+  const usadas = new Set();
+
   for (let p of pool) {
-    if (!seleccionadas.includes(p)) {
+    const clave = p.id || p.pregunta;
+    if (!usadas.has(clave)) {
       seleccionadas.push(p);
+      usadas.add(clave);
     }
     if (seleccionadas.length === num) break;
   }

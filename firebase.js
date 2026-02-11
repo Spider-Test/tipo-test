@@ -21,9 +21,48 @@ export async function guardarEnFirebase(pregunta) {
     console.error("Error al guardar en Firebase", err);
   }
 }
-window.guardarEnFirebase = guardarEnFirebase;
 
+window.guardarEnFirebase = guardarEnFirebase;
 export async function cargarDesdeFirebase() {
+  try {
+    const snapshot = await getDocs(collection(db, "preguntas"));
+    const banco = {};
+
+    snapshot.forEach(docSnap => {
+      const data = docSnap.data();
+      const id = docSnap.id;
+
+      if (!banco[data.tema]) banco[data.tema] = [];
+
+      banco[data.tema].push({
+        id,
+        pregunta: data.pregunta,
+        opciones: data.opciones,
+        correcta: data.correcta,
+        fallada: data.fallada || 0,
+        feedback: data.feedback || ""
+      });
+    });
+
+    // Guardar copia local
+    localStorage.setItem("bancoOffline", JSON.stringify(banco));
+    console.log("Banco cargado desde Firebase y guardado offline");
+
+    return banco;
+
+  } catch (err) {
+    console.warn("Sin conexión. Usando banco offline.");
+
+    const bancoLocal = localStorage.getItem("bancoOffline");
+
+    if (bancoLocal) {
+      return JSON.parse(bancoLocal);
+    } else {
+      console.error("No hay banco offline disponible");
+      return {};
+    }
+  }
+}
   const snapshot = await getDocs(collection(db, "preguntas"));
   const banco = {};
 

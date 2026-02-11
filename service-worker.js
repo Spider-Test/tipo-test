@@ -41,12 +41,15 @@ self.addEventListener("activate", event => {
 
 // Estrategia de caché: network first (segura)
 self.addEventListener("fetch", event => {
+  // Solo manejar peticiones GET del mismo origen
   if (event.request.method !== "GET") return;
+  const url = new URL(event.request.url);
+  if (url.origin !== location.origin) return;
 
   event.respondWith(
     fetch(event.request)
       .then(response => {
-        // Solo cachear respuestas válidas
+        // Solo cachear respuestas válidas del mismo origen
         if (!response || response.status !== 200 || response.type !== "basic") {
           return response;
         }

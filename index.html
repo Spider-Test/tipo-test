@@ -147,6 +147,9 @@
       <button id="btnTest">Test</button>
     </div>
     <div style="margin-left:auto; display:flex; gap:12px; align-items:center;">
+      <a id="linkAdmin" href="admin.html" style="display:none; text-decoration:none;">
+        <button>Admin</button>
+      </a>
       <span id="userInfo"></span>
       <button id="btnLogout" style="display:none">Cerrar sesión</button>
     </div>
@@ -196,17 +199,26 @@
 
     const loginScreen = document.getElementById("loginScreen");
 
+    const ADMIN_EMAIL = "corbalan9714@gmail.com";
+    const linkAdmin = document.getElementById("linkAdmin");
+
     onAuthStateChanged(auth, user => {
       if (user) {
         userInfo.textContent = "👤 " + user.displayName;
         window.currentUser = user;
         loginScreen.style.display = "none";
         btnLogout.style.display = "inline-block";
+
+        if (linkAdmin && user.email === ADMIN_EMAIL) {
+          linkAdmin.style.display = "inline-block";
+        }
       } else {
         userInfo.textContent = "";
         window.currentUser = null;
         loginScreen.style.display = "flex";
         btnLogout.style.display = "none";
+
+        if (linkAdmin) linkAdmin.style.display = "none";
       }
     });
 

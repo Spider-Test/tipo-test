@@ -128,7 +128,7 @@
     }
   </style>
   <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="favicon.ico">
+  <link rel="icon" href="./favicon.ico">
 </head>
 
 <body>
@@ -149,6 +149,9 @@
     <div style="margin-left:auto; display:flex; gap:12px; align-items:center;">
       <a id="linkAdmin" href="admin.html" style="display:none; text-decoration:none;">
         <button>Admin</button>
+      </a>
+      <a id="linkSalirAdmin" href="index.html" style="display:none; text-decoration:none;">
+        <button>Salir del panel</button>
       </a>
       <span id="userInfo"></span>
       <button id="btnLogout" style="display:none">Cerrar sesión</button>
@@ -201,6 +204,7 @@
 
     const ADMIN_EMAIL = "corbalan9714@gmail.com";
     const linkAdmin = document.getElementById("linkAdmin");
+    const linkSalirAdmin = document.getElementById("linkSalirAdmin");
 
     onAuthStateChanged(auth, user => {
       if (user) {
@@ -211,6 +215,7 @@
 
         if (linkAdmin && user.email === ADMIN_EMAIL) {
           linkAdmin.style.display = "inline-block";
+          if (linkSalirAdmin) linkSalirAdmin.style.display = "inline-block";
         }
       } else {
         userInfo.textContent = "";
@@ -219,6 +224,7 @@
         btnLogout.style.display = "none";
 
         if (linkAdmin) linkAdmin.style.display = "none";
+        if (linkSalirAdmin) linkSalirAdmin.style.display = "none";
       }
     });
 

@@ -1,5 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, doc, getDoc, updateDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBQw64gv58J684nbD1QIAqkrIPkbVg_8DU",
@@ -12,6 +13,13 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
+
+let usuarioActual = null;
+
+onAuthStateChanged(auth, (user) => {
+  usuarioActual = user;
+});
 
 export async function guardarEnFirebase(pregunta) {
   try {
@@ -117,3 +125,38 @@ export async function crearBackupAutomatico(banco) {
 }
 
 window.crearBackupAutomatico = crearBackupAutomatico;
+
+// ===== PROGRESO DE TEST SINCRONIZADO =====
+
+import { setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+window.guardarProgresoRemoto = async function (progreso) {
+  try {
+    if (!usuarioActual) return;
+
+    const ref = doc(db, "progresos", usuarioActual.uid);
+    await setDoc(ref, progreso);
+    console.log("Progreso guardado en Firebase");
+  } catch (err) {
+    console.error("Error guardando progreso remoto", err);
+  }
+};
+
+window.cargarProgresoRemoto = async function () {
+  try {
+    if (!usuarioActual) return null;
+
+    const ref = doc(db, "progresos", usuarioActual.uid);
+    const snap = await getDoc(ref);
+
+    if (snap.exists()) {
+      console.log("Progreso remoto cargado");
+      return snap.data();
+    }
+
+    return null;
+  } catch (err) {
+    console.error("Error cargando progreso remoto", err);
+    return null;
+  }
+};

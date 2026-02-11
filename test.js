@@ -51,7 +51,9 @@ let cronometroInterval = null;
 let segundosTest = 0;
 let modoSimulacro = false;
 let segundosRestantes = 0;
+
 let preguntasEnBlanco = [];
+let testEnCurso = false;
 
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -72,6 +74,73 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   initTest();
+
+  // Reanudar test si hay progreso guardado
+  try {
+    const progreso = JSON.parse(localStorage.getItem("progresoTest") || "null");
+    if (progreso && progreso.configuracion) {
+      const continuar = confirm("Hay un test sin terminar. ¿Quieres reanudarlo?");
+      if (continuar) {
+        ultimaConfiguracionTest = progreso.configuracion;
+
+        // Reaplicar número de preguntas
+        const inputNum = document.getElementById("numPreguntas");
+        if (inputNum && ultimaConfiguracionTest.num) {
+          inputNum.value = ultimaConfiguracionTest.num;
+        }
+
+        // Reaplicar selección de temas
+        if (Array.isArray(ultimaConfiguracionTest.temas)) {
+          ultimaConfiguracionTest.temas.forEach(sel => {
+            if (!sel) return;
+
+            if (sel.subtema) {
+              const valor = sel.tema + "||" + sel.subtema;
+              const cb = document.querySelector(
+                `#temasCheckboxes input[data-tipo="subtema"][value="${valor}"]`
+              );
+              if (cb) cb.checked = true;
+            } else {
+              const cb = document.querySelector(
+                `#temasCheckboxes input[data-tipo="tema"][value="${sel.tema}"]`
+              );
+              if (cb) cb.checked = true;
+            }
+          });
+        }
+
+        iniciarTestReal();
+
+        // Restaurar respuestas guardadas
+        if (Array.isArray(progreso.respuestas)) {
+          const zonaTest = document.getElementById("zonaTest");
+          const bloques = zonaTest.querySelectorAll("div");
+
+          progreso.respuestas.forEach((r, i) => {
+            const div = bloques[i];
+            if (!div) return;
+
+            // Restaurar radio seleccionado
+            if (r.respuesta !== null && r.respuesta !== undefined) {
+              const radio = div.querySelector(
+                `input[type="radio"][value="${r.respuesta}"]`
+              );
+              if (radio) radio.checked = true;
+            }
+
+            // Restaurar estado de "marcar pregunta"
+            const check = div.querySelector(".marcar-pregunta");
+            if (check) check.checked = !!r.marcada;
+          });
+        }
+      } else {
+        localStorage.removeItem("progresoTest");
+      }
+    }
+  } catch (e) {
+    console.warn("Error al intentar reanudar test:", e);
+    localStorage.removeItem("progresoTest");
+  }
 });
 
 // 🔄 Sincronización directa con el editor (misma página)
@@ -228,7 +297,7 @@ function crearBloquePregunta(p, i) {
     <br>
     ${p.opciones.map((op, idx) => `
       <label>
-        <input type="radio" name="p${i}" value="${idx}">
+        <input type="radio" name="p${i}" value="${idx}" onchange="autoGuardarProgreso()">
         ${String.fromCharCode(97 + idx)}) ${op}
       </label><br>
     `).join("")}
@@ -401,6 +470,7 @@ function iniciarTest() {
 function iniciarTestReal() {
   const pantallaTemas = document.getElementById("pantallaTemas");
   if (pantallaTemas) pantallaTemas.style.display = "none";
+  testEnCurso = true;
   // Limpieza defensiva de texto residual / debug
   document.querySelectorAll(".debug, .texto-debug").forEach(e => e.remove());
 
@@ -727,6 +797,7 @@ function iniciarTestReal() {
 }
 
 function corregirTest() {
+  testEnCurso = false;
   const zonaTest = document.getElementById("zonaTest");
   const corregirBtn = document.getElementById("corregirBtn");
 
@@ -1241,12 +1312,30 @@ function restablecerTema() {
 function repetirTest() {
   if (!ultimaConfiguracionTest) return;
 
-  // Reaplicar selección de temas
+  // Limpiar selección actual
   document
     .querySelectorAll("#temasCheckboxes input[type='checkbox']")
-    .forEach(cb => {
-      cb.checked = ultimaConfiguracionTest.temas.includes(cb.value);
+    .forEach(cb => cb.checked = false);
+
+  // Reaplicar selección de temas y subtemas
+  if (Array.isArray(ultimaConfiguracionTest.temas)) {
+    ultimaConfiguracionTest.temas.forEach(sel => {
+      if (!sel) return;
+
+      if (sel.subtema) {
+        const valor = sel.tema + "||" + sel.subtema;
+        const cb = document.querySelector(
+          `#temasCheckboxes input[data-tipo="subtema"][value="${valor}"]`
+        );
+        if (cb) cb.checked = true;
+      } else {
+        const cb = document.querySelector(
+          `#temasCheckboxes input[data-tipo="tema"][value="${sel.tema}"]`
+        );
+        if (cb) cb.checked = true;
+      }
     });
+  }
 
   // Reaplicar número de preguntas
   const inputNum = document.getElementById("numPreguntas");
@@ -1254,13 +1343,11 @@ function repetirTest() {
     inputNum.value = ultimaConfiguracionTest.num;
   }
 
-  // Ocultar resumen
   ocultarResumen();
-
   ocultarCronometro();
 
-  // Lanzar nuevo test
-  iniciarTest();
+  // Lanzar directamente el test real
+  iniciarTestReal();
 }
 
 function ocultarResumen() {
@@ -1274,6 +1361,38 @@ function volverASeleccion() {
   const zonaTest = document.getElementById("zonaTest");
   const resumen = document.getElementById("resumenTest");
   const corregirBtn = document.getElementById("corregirBtn");
+
+  // Detectar si hay un test en curso sin corregir
+  const testActivo = zonaTest && zonaTest.style.display === "block";
+
+  if (testActivo && preguntasTest.length > 0 && corregirBtn && corregirBtn.style.display === "block") {
+    const salir = confirm("Hay un test en curso. ¿Quieres salir y guardar el progreso?");
+    if (!salir) return;
+
+    // Guardar respuestas actuales
+    const respuestas = [];
+    const bloques = zonaTest.querySelectorAll("div");
+
+    bloques.forEach((div, i) => {
+      const radio = div.querySelector("input[type=radio]:checked");
+      const marcada = div.querySelector(".marcar-pregunta")?.checked || false;
+
+      respuestas.push({
+        respuesta: radio ? parseInt(radio.value) : null,
+        marcada: marcada
+      });
+    });
+
+    // Guardar progreso completo
+    localStorage.setItem(
+      "progresoTest",
+      JSON.stringify({
+        configuracion: ultimaConfiguracionTest,
+        respuestas: respuestas,
+        timestamp: Date.now()
+      })
+    );
+  }
 
   if (zonaTest) {
     zonaTest.classList.remove("fade-in");
@@ -1291,6 +1410,7 @@ function volverASeleccion() {
   if (typeof cargarTemas === "function") {
     cargarTemas();
   }
+  testEnCurso = false;
 }
 // CAMBIO 4: Mostrar el progreso en el resumen de sesión
 function actualizarProgresoSesion() {
@@ -1407,3 +1527,46 @@ function actualizarEstadoBotonEmpezar() {
     tooltip.style.display = hayModoActivo ? "none" : "block";
   }
 }
+// ===== AUTOGUARDADO PERIÓDICO DEL PROGRESO =====
+function autoGuardarProgreso() {
+  const zonaTest = document.getElementById("zonaTest");
+  if (!zonaTest || !preguntasTest || preguntasTest.length === 0) return;
+
+  const bloques = zonaTest.querySelectorAll("div");
+  const respuestas = [];
+
+  bloques.forEach((div, i) => {
+    const radio = div.querySelector("input[type=radio]:checked");
+    const marcada = div.querySelector(".marcar-pregunta")?.checked || false;
+
+    respuestas.push({
+      respuesta: radio ? parseInt(radio.value) : null,
+      marcada: marcada
+    });
+  });
+
+  localStorage.setItem(
+    "progresoTest",
+    JSON.stringify({
+      configuracion: ultimaConfiguracionTest,
+      respuestas: respuestas,
+      timestamp: Date.now()
+    })
+  );
+  // Sincronización remota si está disponible
+  if (window.guardarProgresoRemoto) {
+    window.guardarProgresoRemoto({
+      configuracion: ultimaConfiguracionTest,
+      respuestas: respuestas,
+      timestamp: Date.now()
+    });
+  }
+}
+
+// ===== PROTECCIÓN CONTRA ABANDONO DEL TEST =====
+window.addEventListener("beforeunload", function (e) {
+  if (testEnCurso) {
+    e.preventDefault();
+    e.returnValue = "";
+  }
+});

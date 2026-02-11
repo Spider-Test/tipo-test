@@ -13,8 +13,8 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
-const db = getFirestore(app);
-const auth = getAuth(app);
+export const db = getFirestore(app);
+export const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
 // Control de acceso por lista blanca

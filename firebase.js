@@ -166,5 +166,3 @@ export async function crearBackupAutomatico(banco) {
 }
 
 window.crearBackupAutomatico = crearBackupAutomatico;
-
-export { db, auth, provider };

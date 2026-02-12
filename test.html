@@ -87,7 +87,7 @@
 
     body {
       padding: 24px 24px 0 24px;
-      padding-bottom: calc(80px + env(safe-area-inset-bottom)); /* espacio seguro para móviles y PWA */
+      padding-bottom: 80px; /* espacio inferior para que los botones no queden pegados */
       min-height: 100vh;
     }
 
@@ -609,124 +609,38 @@ button[onclick*="blanco"] {
     </p>
   </div>
 
-  <hr style="margin:14px 0; border:none; border-top:1px solid var(--border-main);">
+</div>
 
-  <div style="text-align:center; margin-top:10px;">
-    <label style="font-weight:600;">Nº de preguntas</label>
-    <input
-      type="number"
-      id="numPreguntas"
-      min="1"
-      style="margin:8px auto; display:block;"
-    >
+<div style="margin-top:16px; text-align:center;">
+  <label>Nº de preguntas:</label>
+  <input type="number" id="numPreguntas" min="1">
+</div>
 
-    <div class="tooltip-wrapper" style="margin-top:10px;">
-      <button id="btnGenerarTest" onclick="iniciarTest()" disabled>
-        Generar test
-      </button>
-      <div class="tooltip-text">
-        Selecciona un modo para continuar
-      </div>
-    </div>
-  </div>
-
-  <div style="margin-top:20px; text-align:center;">
-    <button onclick="mostrarPantallaHistorial()" style="
-      font-size:14px;
-      padding:8px 12px;
-      width:100%;
-      max-width:220px;
-    ">
-      📊 Ver historial
+<div style="margin-top:18px; text-align:center;">
+  <div class="tooltip-wrapper">
+    <button id="btnGenerarTest" onclick="iniciarTest()" disabled>
+      Generar test
     </button>
+    <div class="tooltip-text">
+      Selecciona un modo para continuar
+    </div>
   </div>
 </div>
 
-<div style="
-  margin-top:48px;
-  margin-bottom:32px;
-  display:flex;
-  justify-content:center;
-">
-  <div style="
-    background: var(--bg-card);
-    border: 1px solid var(--border-main);
-    border-radius: 14px;
-    padding: 16px;
-    width:100%;
-    max-width:320px;
-    text-align:center;
-    box-shadow: 0 6px 18px var(--shadow-main);
-  ">
+<div class="bloque-reset" style="flex-direction:column; align-items:center; margin-top:18px;">
+  <button onclick="restablecerFalladas()" style="font-size:12px; padding:4px 10px;">
+    Restablecer todas las estadísticas
+  </button>
 
-    <button id="toggleResetStats" style="
-      font-weight:600;
-      padding:10px 18px;
-      font-size:15px;
-      border-radius:12px;
-      width:100%;
-    ">
-      ⚙️ Estadísticas
-    </button>
+  <button onclick="restablecerTema()" style="font-size:12px; padding:4px 10px; margin-top:6px;">
+    Restablecer tema seleccionado
+  </button>
 
-    <div id="contenidoResetStats" style="
-      display:none;
-      flex-direction:column;
-      align-items:center;
-      gap:8px;
-      width:100%;
-      margin-top:12px;
-    ">
-      <button onclick="restablecerFalladas()" style="font-size:13px; padding:6px 10px; width:100%;">
-        Restablecer todas las estadísticas
-      </button>
-
-      <button onclick="restablecerTema()" style="font-size:13px; padding:6px 10px; width:100%;">
-        Restablecer tema seleccionado
-      </button>
-
-      <select id="selectorTemaReset" style="
-        padding:6px 8px;
-        border-radius:8px;
-        margin-top:6px;
-        width:100%;
-        text-align:center;
-      ">
-        <option value="">Selecciona un tema</option>
-      </select>
-    </div>
-
-  </div>
+  <select id="selectorTemaReset" style="padding:4px 8px; border-radius:6px; margin-top:6px;">
+    <option value="">Selecciona un tema</option>
+  </select>
 </div>
 
-<div id="pantallaHistorial" class="pantalla-centro" style="display:none;">
-  <h2>Historial de tests</h2>
-
-  <div style="
-    background: var(--bg-card);
-    border: 1px solid var(--border-main);
-    border-radius: 14px;
-    padding: 16px;
-    width:100%;
-    max-width:420px;
-    text-align:center;
-    box-shadow: 0 6px 18px var(--shadow-main);
-  ">
-    <div id="listaHistorial" style="font-size:13px; max-height:300px; overflow:auto;">
-      Sin datos todavía
-    </div>
-  </div>
-
-  <div style="margin-top:18px;">
-    <button onclick="mostrarPantallaInicial()" style="
-      font-size:14px;
-      padding:8px 12px;
-      width:100%;
-      max-width:220px;
-    ">
-      ⬅️ Volver al inicio
-    </button>
-  </div>
 </div>
 
 <div id="pantallaTemas" class="pantalla-centro" style="display:none;">
@@ -737,23 +651,10 @@ button[onclick*="blanco"] {
   <div style="margin-top:14px;">
     <button onclick="seleccionarTodos()">Seleccionar todos</button>
     <button onclick="limpiarSeleccion()">Limpiar selección</button>
-    </div>
-
-    <button onclick="mostrarPantallaHistorial()" style="
-      margin-top:10px;
-      font-size:14px;
-      padding:8px 12px;
-      width:100%;
-    ">
-      📊 Ver historial
-    </button>
+  </div>
 
   <div style="margin-top:18px;">
     <button id="btnEmpezarTest" onclick="iniciarTestReal()">Empezar test</button>
-  </div>
-
-  <div style="margin-top:12px;">
-    <button onclick="mostrarPantallaInicial()">⬅️ Volver</button>
   </div>
 </div>
 
@@ -872,17 +773,6 @@ button[onclick*="blanco"] {
   });
 
   actualizarEstadoBotonGenerar();
-</script>
-<script>
-  const toggleResetBtn = document.getElementById("toggleResetStats");
-  const contenidoReset = document.getElementById("contenidoResetStats");
-
-  if (toggleResetBtn && contenidoReset) {
-    toggleResetBtn.addEventListener("click", () => {
-      const abierto = contenidoReset.style.display === "flex";
-      contenidoReset.style.display = abierto ? "none" : "flex";
-    });
-  }
 </script>
 <!-- Lógica del test gestionada íntegramente en test.js -->
 <script type="module" src="firebase.js"></script>

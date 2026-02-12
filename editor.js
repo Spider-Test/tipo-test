@@ -63,6 +63,8 @@ function initEditor() {
         cargarTemasExistentes();
         cargarSelectEliminar();
         cargarSelectRenombrar();
+        cargarTemasRenombrarSubtema();
+        validarRenombradoSubtema();
         // === NUEVO BLOQUE AGREGADO ===
         const temaVista = document.getElementById("temaVista");
         const subtemaVista = document.getElementById("subtemaVista");
@@ -86,6 +88,8 @@ function initEditor() {
     cargarTemasExistentes();
     cargarSelectEliminar();
     cargarSelectRenombrar();
+    cargarTemasRenombrarSubtema();
+    validarRenombradoSubtema();
     // === NUEVO BLOQUE AGREGADO ===
     const temaVista = document.getElementById("temaVista");
     const subtemaVista = document.getElementById("subtemaVista");
@@ -558,7 +562,37 @@ function cargarSelectEliminar() {
     opt.textContent = tema;
     select.appendChild(opt);
   });
-} 
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const temaEliminar = document.getElementById("temaEliminar");
+  if (temaEliminar) {
+    temaEliminar.addEventListener("change", cargarSubtemasEliminar);
+  }
+});
+
+function cargarSubtemasEliminar() {
+  const temaSelect = document.getElementById("temaEliminar");
+  const subtemaSelect = document.getElementById("subtemaEliminar");
+  if (!temaSelect || !subtemaSelect) return;
+
+  const tema = temaSelect.value;
+  subtemaSelect.innerHTML = "<option value=''>-- seleccionar subtema --</option>";
+
+  if (!tema || !banco[tema]) return;
+
+  const subtemas = new Set();
+  banco[tema].forEach(p => {
+    subtemas.add(p.subtema || "General");
+  });
+
+  subtemas.forEach(st => {
+    const opt = document.createElement("option");
+    opt.value = st;
+    opt.textContent = st;
+    subtemaSelect.appendChild(opt);
+  });
+}
 
 // ====== VALIDACIÓN DE FORMULARIO (activar/desactivar botón) ======
 function prepararValidacionFormulario() {
@@ -736,6 +770,153 @@ function cargarSelectRenombrar() {
     opt.textContent = tema;
     select.appendChild(opt);
   });
+}
+
+function cargarTemasRenombrarSubtema() {
+  const select = document.getElementById("temaRenombrarSubtema");
+  if (!select) return;
+
+  select.innerHTML = "<option value=''>-- seleccionar tema --</option>";
+
+  Object.keys(banco).forEach(tema => {
+    if (tema === "__falladas__") return;
+
+    const opt = document.createElement("option");
+    opt.value = tema;
+    opt.textContent = tema;
+    select.appendChild(opt);
+  });
+}
+// ====== RENOMBRAR SUBTEMA: Cargar subtemas según tema seleccionado ======
+document.addEventListener("DOMContentLoaded", () => {
+  const temaSelect = document.getElementById("temaRenombrarSubtema");
+  if (temaSelect) {
+    temaSelect.addEventListener("change", cargarSubtemasRenombrar);
+  }
+});
+
+function cargarSubtemasRenombrar() {
+  const temaSelect = document.getElementById("temaRenombrarSubtema");
+  const subtemaSelect = document.getElementById("subtemaRenombrar");
+
+  if (!temaSelect || !subtemaSelect) return;
+
+  const tema = temaSelect.value;
+  subtemaSelect.innerHTML = "<option value=''>-- seleccionar subtema --</option>";
+
+  if (!tema || !banco[tema]) return;
+
+  const subtemas = new Set();
+  banco[tema].forEach(p => {
+    subtemas.add(p.subtema || "General");
+  });
+
+  subtemas.forEach(st => {
+    const opt = document.createElement("option");
+    opt.value = st;
+    opt.textContent = st;
+    subtemaSelect.appendChild(opt);
+  });
+  // Activar o desactivar botón de renombrar según selección
+  const botonRenombrar = document.querySelector("button[onclick='renombrarSubtema()']");
+  if (botonRenombrar) {
+    const activo = Boolean(subtemaSelect.value);
+    botonRenombrar.disabled = !activo;
+    botonRenombrar.style.opacity = activo ? "1" : "0.5";
+    botonRenombrar.style.cursor = activo ? "pointer" : "not-allowed";
+  }
+}
+
+// Activar botón de renombrar subtema al cambiar selección
+document.addEventListener("DOMContentLoaded", () => {
+  const subtemaSelect = document.getElementById("subtemaRenombrar");
+  subtemaSelect && subtemaSelect.addEventListener("change", validarRenombradoSubtema);
+  const inputNuevo = document.getElementById("nuevoNombreSubtema");
+  if (inputNuevo) {
+    inputNuevo.addEventListener("input", validarRenombradoSubtema);
+  }
+});
+
+function renombrarSubtema() {
+  const temaSelect = document.getElementById("temaRenombrarSubtema");
+  const subtemaSelect = document.getElementById("subtemaRenombrar");
+  const inputNuevo = document.getElementById("nuevoNombreSubtema");
+
+  if (!temaSelect || !subtemaSelect || !inputNuevo) return;
+
+  const tema = temaSelect.value;
+  const subtemaViejo = subtemaSelect.value;
+  const subtemaNuevo = inputNuevo.value.trim();
+
+  if (!tema) {
+    alert("Selecciona un tema");
+    return;
+  }
+
+  if (!subtemaViejo) {
+    alert("Selecciona un subtema");
+    return;
+  }
+
+  if (!subtemaNuevo) {
+    alert("Escribe el nuevo nombre del subtema");
+    return;
+  }
+
+  if (!banco[tema]) return;
+
+  // Renombrar subtema en banco local
+  banco[tema].forEach(p => {
+    const st = p.subtema || "General";
+    if (st === subtemaViejo) {
+      p.subtema = subtemaNuevo;
+
+      // Sincronizar con Firebase si tiene id
+      if (p.id && window.actualizarPreguntaFirebase) {
+        window.actualizarPreguntaFirebase(p.id, {
+          tema: tema,
+          subtema: subtemaNuevo,
+          pregunta: p.pregunta,
+          opciones: p.opciones,
+          correcta: p.correcta,
+          feedback: p.feedback || ""
+        });
+      }
+    }
+  });
+
+  guardarBanco();
+  if (window.crearBackupAutomatico) window.crearBackupAutomatico(banco);
+
+  cargarSubtemasRenombrar();
+  cargarSubtemasVista();
+  mostrarPreguntas();
+
+  inputNuevo.value = "";
+  alert(`Subtema renombrado a "${subtemaNuevo}"`);
+}
+
+function validarRenombradoSubtema() {
+  const temaSelect = document.getElementById("temaRenombrarSubtema");
+  const subtemaSelect = document.getElementById("subtemaRenombrar");
+  const inputNuevo = document.getElementById("nuevoNombreSubtema");
+  const boton = document.querySelector("button[onclick='renombrarSubtema()']");
+
+  if (!temaSelect || !subtemaSelect || !inputNuevo || !boton) return;
+
+  const tema = temaSelect.value;
+  const subtema = subtemaSelect.value;
+  const nuevo = inputNuevo.value.trim();
+
+  const valido =
+    tema &&
+    subtema &&
+    nuevo &&
+    nuevo !== subtema;
+
+  boton.disabled = !valido;
+  boton.style.opacity = valido ? "1" : "0.5";
+  boton.style.cursor = valido ? "pointer" : "not-allowed";
 }
 // ====== SUBTEMAS POR TEMA ======
 function cargarSubtemasPorTema() {

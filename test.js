@@ -28,7 +28,76 @@ function renderizarOpcionesCorregidas(p) {
 
   return html;
 }
+
 const STORAGE_KEY = "bancoPreguntas";
+
+// ===== HISTORIAL DE TESTS =====
+
+function obtenerHistorialTests() {
+  return JSON.parse(localStorage.getItem("historialTests") || "[]");
+}
+
+// ===== FILTRO DE HISTORIAL POR TEMA =====
+function filtrarHistorialPorTema(tema) {
+  const historial = obtenerHistorialTests();
+
+  if (!tema || tema === "todos") {
+    return historial;
+  }
+
+  return historial.filter(test => {
+    if (!Array.isArray(test.temas)) return false;
+    return test.temas.some(t => t.tema === tema);
+  });
+}
+
+function renderizarHistorial(temaSeleccionado) {
+  const cont = document.getElementById("historialLista");
+  if (!cont) return;
+
+  const historial = filtrarHistorialPorTema(temaSeleccionado);
+
+  cont.innerHTML = "";
+
+  if (historial.length === 0) {
+    cont.innerHTML = "<p>No hay tests registrados.</p>";
+    return;
+  }
+
+  historial
+    .slice()
+    .reverse()
+    .forEach((test, i) => {
+      const div = document.createElement("div");
+      div.style.marginBottom = "8px";
+      div.style.padding = "8px";
+      div.style.border = "1px solid #ddd";
+      div.style.borderRadius = "6px";
+
+      const fecha = new Date(test.fecha).toLocaleString();
+
+      div.innerHTML = `
+        <strong>${fecha}</strong><br>
+        Aciertos: ${test.aciertos} | Fallos: ${test.fallos} | Blanco: ${test.enBlanco}<br>
+        <strong>Nota: ${test.nota}</strong>
+      `;
+
+      cont.appendChild(div);
+    });
+}
+
+// Conectar selector de tema del historial
+window.addEventListener("DOMContentLoaded", () => {
+  const select = document.getElementById("filtroTemaHistorial");
+  if (!select) return;
+
+  select.addEventListener("change", () => {
+    renderizarHistorial(select.value);
+  });
+
+  // Carga inicial
+  renderizarHistorial("todos");
+});
 
 function cargarBancoLocal() {
   return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
@@ -444,6 +513,25 @@ function mostrarPantallaTemas() {
   if (contTemas) {
     contTemas.style.display = "flex";
     contTemas.classList.add("inicio");
+  }
+}
+
+function mostrarPantallaHistorial() {
+  const pantalla = document.getElementById("pantallaSeleccion");
+  const pantallaTemas = document.getElementById("pantallaTemas");
+  const zonaTest = document.getElementById("zonaTest");
+  const resumen = document.getElementById("resumenTest");
+  const historial = document.getElementById("pantallaHistorial");
+
+  if (pantalla) pantalla.style.display = "none";
+  if (pantallaTemas) pantallaTemas.style.display = "none";
+  if (zonaTest) zonaTest.style.display = "none";
+  if (resumen) resumen.style.display = "none";
+  if (historial) historial.style.display = "block";
+
+  if (typeof renderizarHistorial === "function") {
+    const select = document.getElementById("filtroTemaHistorial");
+    renderizarHistorial(select ? select.value : "todos");
   }
 }
 
@@ -920,6 +1008,42 @@ function corregirTest() {
   }
 
   mostrarResumen();
+
+  // Guardar historial del test
+  try {
+    const aciertos = preguntasAcertadas.length;
+    const fallos = preguntasFalladas.length;
+    const enBlanco = preguntasEnBlanco.length;
+    const total = preguntasTest.length || 1;
+
+    // Calcular nota rápida (misma lógica básica)
+    let penalizacion = 0;
+    const tipo = preguntasTest[0]?.opciones?.length || 4;
+    if (tipo === 4) penalizacion = fallos * 0.25;
+    else if (tipo === 3) penalizacion = fallos * (1 / 3);
+
+    let neta = aciertos - penalizacion;
+    if (neta < 0) neta = 0;
+    let nota = (neta / total) * 10;
+    nota = Math.max(0, Math.min(10, nota));
+
+    let historial = JSON.parse(localStorage.getItem("historialTests") || "[]");
+    historial.push({
+      fecha: new Date().toISOString(),
+      aciertos,
+      fallos,
+      enBlanco,
+      nota: Number(nota.toFixed(3)),
+      temas: (ultimaConfiguracionTest && ultimaConfiguracionTest.temas) || []
+    });
+    localStorage.setItem("historialTests", JSON.stringify(historial));
+    // Refrescar historial en pantalla si existe el contenedor
+    if (typeof renderizarHistorial === "function") {
+      renderizarHistorial("todos");
+    }
+  } catch (e) {
+    console.warn("No se pudo guardar historial:", e);
+  }
 }
 
 function obtenerTemasSeleccionados() {
@@ -1570,3 +1694,7 @@ window.addEventListener("beforeunload", function (e) {
     e.returnValue = "";
   }
 });
+
+window.mostrarPantallaInicial = mostrarPantallaInicial;
+window.mostrarPantallaTemas = mostrarPantallaTemas;
+window.mostrarPantallaHistorial = mostrarPantallaHistorial;

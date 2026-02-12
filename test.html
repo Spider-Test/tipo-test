@@ -628,37 +628,46 @@ button[onclick*="blanco"] {
 
 <div style="
   margin-top:18px;
-  padding:14px;
-  background: var(--bg-card);
-  border:1px solid var(--border-main);
-  border-radius:14px;
-  max-width:340px;
+  max-width:320px;
   margin-left:auto;
   margin-right:auto;
   text-align:center;
-  box-shadow: 0 6px 18px var(--shadow-main);
 ">
-
-  <button onclick="restablecerFalladas()" style="font-size:13px; padding:6px 12px; width:100%; margin-bottom:8px;">
-    Restablecer todas las estadísticas
+  <button onclick="toggleResetStats()" style="width:100%;">
+    ⚙️ Estadísticas
   </button>
 
-  <button onclick="restablecerTema()" style="font-size:13px; padding:6px 12px; width:100%;">
-    Restablecer estadísticas del tema
-  </button>
-
-  <select id="selectorTemaReset" style="
-    width:100%;
-    padding:6px 8px;
-    border-radius:8px;
-    margin-top:8px;
+  <div id="bloqueResetStats" style="
+    display:none;
+    margin-top:10px;
+    padding:14px;
+    background: var(--bg-card);
     border:1px solid var(--border-main);
-    background:var(--bg-card);
-    color:var(--text-main);
+    border-radius:14px;
+    box-shadow: 0 6px 18px var(--shadow-main);
   ">
-    <option value="">Selecciona un tema</option>
-  </select>
 
+    <button onclick="restablecerFalladas()" style="font-size:13px; padding:6px 12px; width:100%; margin-bottom:8px;">
+      Restablecer todas las estadísticas
+    </button>
+
+    <button onclick="restablecerTema()" style="font-size:13px; padding:6px 12px; width:100%;">
+      Restablecer estadísticas del tema
+    </button>
+
+    <select id="selectorTemaReset" style="
+      width:100%;
+      padding:6px 8px;
+      border-radius:8px;
+      margin-top:8px;
+      border:1px solid var(--border-main);
+      background:var(--bg-card);
+      color:var(--text-main);
+    ">
+      <option value="">Selecciona un tema</option>
+    </select>
+
+  </div>
 </div>
 
 </div>
@@ -677,7 +686,7 @@ button[onclick*="blanco"] {
     <button id="btnEmpezarTest" onclick="iniciarTestReal()">Empezar test</button>
   </div>
 
-  <div style="margin-top:12px;">
+  <div style="margin-top:0; margin-bottom:10px;">
     <button onclick="mostrarPantallaInicial()">⬅️ Volver</button>
   </div>
 </div>
@@ -797,6 +806,14 @@ button[onclick*="blanco"] {
   });
 
   actualizarEstadoBotonGenerar();
+</script>
+</script>
+<script>
+  function toggleResetStats() {
+    const bloque = document.getElementById("bloqueResetStats");
+    if (!bloque) return;
+    bloque.style.display = bloque.style.display === "none" ? "block" : "none";
+  }
 </script>
 <!-- Lógica del test gestionada íntegramente en test.js -->
 <script type="module" src="firebase.js"></script>

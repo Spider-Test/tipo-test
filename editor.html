@@ -74,15 +74,30 @@ body {
     }
 
     h1 {
-      font-size: 24px;
-      font-weight: 600;
-      margin-bottom: 16px;
+      font-size: 26px;
+      font-weight: 700;
+      margin: 0;
+      text-align: center;
+    }
+
+    .header-card {
+      background: var(--bg-card);
+      border-radius: 16px;
+      padding: 16px 20px;
+      margin-bottom: 18px;
+      box-shadow: 0 6px 18px var(--shadow-main);
+      border: 1px solid var(--border-main);
     }
 
     h2 {
       font-size: 18px;
       font-weight: 600;
       margin: 28px 0 12px;
+    }
+
+    summary {
+      text-align: center;
+      cursor: pointer;
     }
 
     label {
@@ -204,8 +219,11 @@ body {
 </head>
 <body>
 
-<h1>Editor de preguntas</h1>
-<details open>
+<div class="header-card">
+  <h1>Editor de preguntas</h1>
+</div>
+<div style="height:1px; background:var(--border-main); margin:16px 0 24px 0; opacity:0.4;"></div>
+<details>
 <summary style="font-size:18px; font-weight:600; margin:16px 0;">Añadir preguntas</summary>
 <div>
 <label>Tema:</label>
@@ -241,8 +259,39 @@ body {
   Cancelar edición
 </button>
 
+}</div>
+</details>
+<hr>
+<details>
+<summary style="font-size:18px; font-weight:600; margin:16px 0;">Mover pregunta de tema/subtema</summary>
+<div>
+
+<label>Tema actual:</label><br>
+<select id="temaMover"></select><br><br>
+
+<label>Subtema actual:</label><br>
+<select id="subtemaMover">
+  <option value="">Selecciona subtema</option>
+</select><br><br>
+
+<label>Pregunta:</label><br>
+<select id="preguntaMover"></select><br><br>
+
+<hr style="margin:16px 0;">
+
+<label>Nuevo tema:</label><br>
+<select id="nuevoTemaMover"></select><br><br>
+
+<label>Nuevo subtema:</label><br>
+<select id="nuevoSubtemaMover">
+  <option value="">Selecciona subtema destino</option>
+</select><br><br>
+
+<button onclick="moverPregunta()">Mover pregunta</button>
+
 </div>
 </details>
+
 <hr>
 
 <details>

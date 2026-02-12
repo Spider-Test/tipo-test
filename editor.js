@@ -979,3 +979,158 @@ function cargarSubtemasVista() {
 
   selectSubtema.onchange = mostrarPreguntas;
 }
+// ====== MOVER PREGUNTA ENTRE TEMAS / SUBTEMAS ======
+function cargarTemasMover() {
+  const selectTema = document.getElementById("temaMover");
+  const selectNuevoTema = document.getElementById("nuevoTemaMover");
+  if (!selectTema || !selectNuevoTema) return;
+
+  selectTema.innerHTML = "<option value=''>-- seleccionar tema --</option>";
+  selectNuevoTema.innerHTML = "<option value=''>-- seleccionar tema destino --</option>";
+
+  Object.keys(banco).forEach(tema => {
+    if (tema === "__falladas__") return;
+
+    const opt1 = document.createElement("option");
+    opt1.value = tema;
+    opt1.textContent = tema;
+    selectTema.appendChild(opt1);
+
+    const opt2 = document.createElement("option");
+    opt2.value = tema;
+    opt2.textContent = tema;
+    selectNuevoTema.appendChild(opt2);
+  });
+}
+
+function cargarSubtemasMover() {
+  const tema = document.getElementById("temaMover")?.value;
+  const selectSubtema = document.getElementById("subtemaMover");
+  if (!selectSubtema) return;
+
+  selectSubtema.innerHTML = "<option value=''>Selecciona subtema</option>";
+  if (!tema || !banco[tema]) return;
+
+  const subtemas = new Set();
+  banco[tema].forEach(p => subtemas.add(p.subtema || "General"));
+
+  subtemas.forEach(st => {
+    const opt = document.createElement("option");
+    opt.value = st;
+    opt.textContent = st;
+    selectSubtema.appendChild(opt);
+  });
+}
+
+function cargarPreguntasMover() {
+  const tema = document.getElementById("temaMover")?.value;
+  const subtema = document.getElementById("subtemaMover")?.value;
+  const selectPregunta = document.getElementById("preguntaMover");
+
+  if (!selectPregunta) return;
+  selectPregunta.innerHTML = "<option value=''>-- seleccionar pregunta --</option>";
+
+  if (!tema || !banco[tema]) return;
+
+  banco[tema].forEach((p, i) => {
+    const st = p.subtema || "General";
+    if (subtema && st !== subtema) return;
+
+    const opt = document.createElement("option");
+    opt.value = i;
+    opt.textContent = p.pregunta.slice(0, 80);
+    selectPregunta.appendChild(opt);
+  });
+}
+
+function cargarSubtemasDestinoMover() {
+  const tema = document.getElementById("nuevoTemaMover")?.value;
+  const selectSubtema = document.getElementById("nuevoSubtemaMover");
+  if (!selectSubtema) return;
+
+  selectSubtema.innerHTML = "<option value=''>Selecciona subtema destino</option>";
+
+  if (!tema || !banco[tema]) return;
+
+  const subtemas = new Set();
+  banco[tema].forEach(p => {
+    subtemas.add(p.subtema || "General");
+  });
+
+  // Asegurar que "General" siempre esté primero y sin duplicados
+  const listaSubtemas = Array.from(subtemas);
+  if (!listaSubtemas.includes("General")) {
+    listaSubtemas.unshift("General");
+  }
+
+  listaSubtemas.forEach(st => {
+    const opt = document.createElement("option");
+    opt.value = st;
+    opt.textContent = st;
+    selectSubtema.appendChild(opt);
+  });
+}
+
+async function moverPregunta() {
+  const temaOrigen = document.getElementById("temaMover")?.value;
+  const index = document.getElementById("preguntaMover")?.value;
+  const temaDestino = document.getElementById("nuevoTemaMover")?.value;
+  const subtemaDestino = document.getElementById("nuevoSubtemaMover")?.value || "General";
+
+  if (!temaOrigen || index === "" || !temaDestino) {
+    alert("Selecciona origen y destino");
+    return;
+  }
+
+  const pregunta = banco[temaOrigen][index];
+  if (!pregunta) return;
+
+  // Quitar del origen
+  banco[temaOrigen].splice(index, 1);
+  if (banco[temaOrigen].length === 0) delete banco[temaOrigen];
+
+  // Preparar destino
+  if (!banco[temaDestino]) banco[temaDestino] = [];
+
+  pregunta.subtema = subtemaDestino;
+  banco[temaDestino].push(pregunta);
+
+  // Sincronizar en Firebase
+  if (pregunta.id && window.actualizarPreguntaFirebase) {
+    await window.actualizarPreguntaFirebase(pregunta.id, {
+      tema: temaDestino,
+      subtema: subtemaDestino,
+      pregunta: pregunta.pregunta,
+      opciones: pregunta.opciones,
+      correcta: pregunta.correcta,
+      feedback: pregunta.feedback || ""
+    });
+  }
+
+  guardarBanco();
+  if (window.crearBackupAutomatico) window.crearBackupAutomatico(banco);
+
+  cargarTemasVista();
+  cargarTemasExistentes();
+  cargarSelectEliminar();
+  cargarSelectRenombrar();
+
+  alert("Pregunta movida correctamente");
+}
+
+// Inicializar selects de mover pregunta
+document.addEventListener("DOMContentLoaded", () => {
+  cargarTemasMover();
+
+  const temaMover = document.getElementById("temaMover");
+  const subtemaMover = document.getElementById("subtemaMover");
+  const nuevoTemaMover = document.getElementById("nuevoTemaMover");
+
+  temaMover && temaMover.addEventListener("change", () => {
+    cargarSubtemasMover();
+    cargarPreguntasMover();
+  });
+
+  subtemaMover && subtemaMover.addEventListener("change", cargarPreguntasMover);
+  nuevoTemaMover && nuevoTemaMover.addEventListener("change", cargarSubtemasDestinoMover);
+});

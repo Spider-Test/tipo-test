@@ -1,6 +1,6 @@
 {
-  "name": "Tipo Test",
-  "short_name": "TipoTest",
+  "name": "Spider-Test",
+  "short_name": "SpiderTest",
   "start_url": "index.html",
   "display": "standalone",
   "background_color": "#f7f8fa",

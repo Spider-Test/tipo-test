@@ -1344,6 +1344,20 @@ function crearTemaEstructura() {
     banco[tema] = [];
     guardarBanco();
     if (window.crearBackupAutomatico) window.crearBackupAutomatico(banco);
+
+    // Sincronizar tema vacío en Firebase (pregunta ficticia)
+    if (window.guardarEnFirebase) {
+      window.guardarEnFirebase({
+        tema: tema,
+        subtema: "General",
+        pregunta: "__temaVacio__",
+        opciones: [""],
+        correcta: 0,
+        feedback: "",
+        fecha: Date.now(),
+        __temaVacio: true
+      });
+    }
   }
 
   input.value = "";
@@ -1375,7 +1389,7 @@ function crearSubtemaVacio() {
   if (!banco[tema]) banco[tema] = [];
 
   // Crear pregunta ficticia para mantener el subtema
-  banco[tema].push({
+  const preguntaFicticia = {
     pregunta: "__subtemaVacio__",
     opciones: [""],
     correcta: 0,
@@ -1383,7 +1397,23 @@ function crearSubtemaVacio() {
     feedback: "",
     subtema: subtema,
     __subtemaVacio: true
-  });
+  };
+
+  banco[tema].push(preguntaFicticia);
+
+  // Sincronizar en Firebase
+  if (window.guardarEnFirebase) {
+    window.guardarEnFirebase({
+      tema: tema,
+      subtema: subtema,
+      pregunta: "__subtemaVacio__",
+      opciones: [""],
+      correcta: 0,
+      feedback: "",
+      fecha: Date.now(),
+      __subtemaVacio: true
+    });
+  }
 
   guardarBanco();
   if (window.crearBackupAutomatico) window.crearBackupAutomatico(banco);

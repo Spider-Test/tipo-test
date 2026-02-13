@@ -11,7 +11,6 @@ function guardarBanco() {
 
 
 let banco = cargarBanco();
-window.banco = banco;
 let editando = null;
 let textoBusqueda = "";
 let contadorResultados = 0;
@@ -51,6 +50,12 @@ function resaltarTexto(textoOriginal, terminoBusqueda) {
   return texto;
 }
 
+// ====== FORMATEAR NEGRITA MARKDOWN ======
+function formatearNegrita(texto) {
+  if (!texto) return "";
+  return texto.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+}
+
 /* ====== INICIALIZACIÓN ====== */
 document.addEventListener("DOMContentLoaded", initEditor);
 
@@ -60,7 +65,6 @@ function initEditor() {
     window.cargarDesdeFirebase()
       .then(bancoFirebase => {
         banco = bancoFirebase;
-        window.banco = banco;
         // Guardar copia local para modo offline
         localStorage.setItem(STORAGE_KEY, JSON.stringify(banco));
       })
@@ -94,7 +98,6 @@ function initEditor() {
       });
   } else {
     banco = cargarBanco();
-    window.banco = banco;
     limpiarTemasVacios();
     actualizarOpciones();
     cargarTemasVista();
@@ -230,7 +233,7 @@ function guardarPregunta() {
 
   // MODO EDICIÓN
   if (editando) {
-    const { tema: temaOriginal, index } = editando;
+    const { tema: temaOriginal, index, id } = editando;
     const original = banco[temaOriginal][index];
 
     const actualizada = {
@@ -246,8 +249,8 @@ function guardarPregunta() {
     banco[temaOriginal][index] = actualizada;
 
     // Sincronizar con Firebase si tiene id
-    if (actualizada.id && window.actualizarPreguntaFirebase) {
-      window.actualizarPreguntaFirebase(actualizada.id, {
+    if (id && window.actualizarPreguntaFirebase) {
+      window.actualizarPreguntaFirebase(id, {
         tema: temaOriginal,
         pregunta,
         opciones,
@@ -255,6 +258,14 @@ function guardarPregunta() {
         feedback
       });
     }
+
+    // Quitar indicador de modo edición
+    const indicador = document.getElementById("modoEdicionIndicador");
+    if (indicador) indicador.remove();
+
+    // Restaurar texto del botón guardar
+    const btnGuardar = document.querySelector("button[onclick='guardarPregunta()']");
+    if (btnGuardar) btnGuardar.textContent = "Guardar pregunta";
 
     editando = null;
   } else {
@@ -267,21 +278,22 @@ function guardarPregunta() {
       feedback,
       subtema
     });
+    // Crear en Firebase solo si es pregunta nueva
+    if (window.guardarEnFirebase) {
+      window.guardarEnFirebase({
+        tema,
+        subtema,
+        pregunta,
+        opciones,
+        correcta,
+        feedback,
+        fecha: Date.now()
+      });
+    }
   }
 
   guardarBanco();
   if (window.crearBackupAutomatico) window.crearBackupAutomatico(banco);
-  if (window.guardarEnFirebase) {
-    window.guardarEnFirebase({
-      tema,
-      subtema,
-      pregunta,
-      opciones,
-      correcta,
-      feedback,
-      fecha: Date.now()
-    });
-  }
   // 🔄 Avisar al test que el banco ha cambiado
   if (window.parent) {
     window.parent.postMessage({ type: "BANCO_ACTUALIZADO" }, "*");
@@ -363,15 +375,15 @@ function mostrarPreguntas() {
       <div style="font-size:12px; opacity:0.7; margin-bottom:4px;">
         ${tema} → ${p.subtema || "General"}
       </div>
-      <strong>${i + 1}. ${resaltarTexto(p.pregunta, textoBusqueda)}</strong><br>
+      <strong>${i + 1}. ${formatearNegrita(resaltarTexto(p.pregunta, textoBusqueda))}</strong><br>
       <ul>
         ${p.opciones.map((op, idx) =>
-          `<li ${idx === p.correcta ? 'style="font-weight:bold"' : ''}>${resaltarTexto(op, textoBusqueda)}</li>`
+          `<li ${idx === p.correcta ? 'style="font-weight:bold"' : ''}>${formatearNegrita(resaltarTexto(op, textoBusqueda))}</li>`
         ).join("")}
       </ul>
-      ${p.feedback ? `<div style="margin-top:6px; white-space:pre-line;"><em>Feedback:</em>\n${resaltarTexto(p.feedback, textoBusqueda)}</div>` : ""}
-      <button onclick="cargarParaEditar('${tema}', ${i})">Editar</button>
-      <button class="btn-borrar" onclick="borrarPregunta('${tema}', ${i})">Borrar</button>
+      ${p.feedback ? `<div style="margin-top:6px; white-space:pre-line;"><em>Feedback:</em>\n${formatearNegrita(resaltarTexto(p.feedback, textoBusqueda))}</div>` : ""}
+      <button type="button" onclick="cargarParaEditar('${tema}', ${i})">Editar</button>
+      <button type="button" class="btn-borrar" onclick="borrarPregunta('${tema}', ${i})">Borrar</button>
     `;
     contenedor.appendChild(div);
   });
@@ -392,9 +404,16 @@ function mostrarPreguntas() {
 
 function cargarParaEditar(tema, index) {
   const p = banco[tema][index];
-  editando = { tema, index };
+  editando = { tema, index, id: p.id || null };
 
   document.getElementById("tema").value = tema;
+  // === Cargar subtema en el formulario ===
+  const subtemaInput = document.getElementById("subtemaPregunta");
+  const subtemaSelect = document.getElementById("subtemaExistente");
+  const subtema = p.subtema || "General";
+
+  if (subtemaInput) subtemaInput.value = subtema;
+  if (subtemaSelect) subtemaSelect.value = subtema;
   document.getElementById("pregunta").value = p.pregunta;
   document.getElementById("feedback").value = p.feedback || "";
 
@@ -411,6 +430,36 @@ function cargarParaEditar(tema, index) {
   document.querySelectorAll('input[name="correcta"]').forEach(r => {
     r.checked = Number(r.value) === p.correcta;
   });
+
+  // Abrir el panel de edición y hacer scroll
+  const panel = document.querySelector("details");
+  if (panel) panel.open = true;
+
+  const form = document.getElementById("pregunta");
+  if (form) form.scrollIntoView({ behavior: "smooth", block: "center" });
+
+  // Indicador visual de modo edición
+  let indicador = document.getElementById("modoEdicionIndicador");
+  if (!indicador) {
+    indicador = document.createElement("div");
+    indicador.id = "modoEdicionIndicador";
+    indicador.style.background = "#fff3cd";
+    indicador.style.color = "#856404";
+    indicador.style.padding = "10px";
+    indicador.style.borderRadius = "10px";
+    indicador.style.margin = "10px 0";
+    indicador.style.fontWeight = "600";
+    indicador.textContent = "Modo edición: estás modificando una pregunta existente";
+
+    const campoPregunta = document.getElementById("pregunta");
+    if (campoPregunta && campoPregunta.parentNode) {
+      campoPregunta.parentNode.insertBefore(indicador, campoPregunta);
+    }
+  }
+
+  // Cambiar texto del botón guardar
+  const btnGuardar = document.querySelector("button[onclick='guardarPregunta()']");
+  if (btnGuardar) btnGuardar.textContent = "Guardar cambios";
 }
 
 function borrarPregunta(tema, index) {
@@ -974,12 +1023,6 @@ function cargarSubtemasPorTema() {
       selectSubtema.appendChild(opt);
     });
 }
-
-function cargarSubtemas() {
-  cargarSubtemasPorTema();
-}
-
-window.cargarSubtemas = cargarSubtemas;
  
 // ====== CANCELAR EDICIÓN ======
 document.addEventListener("DOMContentLoaded", () => {
@@ -989,6 +1032,14 @@ document.addEventListener("DOMContentLoaded", () => {
   btnCancelar.addEventListener("click", () => {
     editando = null;
     limpiarFormulario();
+
+    // Quitar indicador de modo edición
+    const indicador = document.getElementById("modoEdicionIndicador");
+    if (indicador) indicador.remove();
+
+    // Restaurar texto del botón guardar
+    const btnGuardar = document.querySelector("button[onclick='guardarPregunta()']");
+    if (btnGuardar) btnGuardar.textContent = "Guardar pregunta";
   });
 });
 // ====== SUBTEMAS EN VISTA AVANZADA ======

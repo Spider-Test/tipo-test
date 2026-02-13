@@ -50,6 +50,12 @@ function resaltarTexto(textoOriginal, terminoBusqueda) {
   return texto;
 }
 
+// ====== FORMATEAR NEGRITA MARKDOWN ======
+function formatearNegrita(texto) {
+  if (!texto) return "";
+  return texto.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+}
+
 /* ====== INICIALIZACIÓN ====== */
 document.addEventListener("DOMContentLoaded", initEditor);
 
@@ -368,13 +374,13 @@ function mostrarPreguntas() {
       <div style="font-size:12px; opacity:0.7; margin-bottom:4px;">
         ${tema} → ${p.subtema || "General"}
       </div>
-      <strong>${i + 1}. ${resaltarTexto(p.pregunta, textoBusqueda)}</strong><br>
+      <strong>${i + 1}. ${formatearNegrita(resaltarTexto(p.pregunta, textoBusqueda))}</strong><br>
       <ul>
         ${p.opciones.map((op, idx) =>
-          `<li ${idx === p.correcta ? 'style="font-weight:bold"' : ''}>${resaltarTexto(op, textoBusqueda)}</li>`
+          `<li ${idx === p.correcta ? 'style="font-weight:bold"' : ''}>${formatearNegrita(resaltarTexto(op, textoBusqueda))}</li>`
         ).join("")}
       </ul>
-      ${p.feedback ? `<div style="margin-top:6px; white-space:pre-line;"><em>Feedback:</em>\n${resaltarTexto(p.feedback, textoBusqueda)}</div>` : ""}
+      ${p.feedback ? `<div style="margin-top:6px; white-space:pre-line;"><em>Feedback:</em>\n${formatearNegrita(resaltarTexto(p.feedback, textoBusqueda))}</div>` : ""}
       <button type="button" onclick="cargarParaEditar('${tema}', ${i})">Editar</button>
       <button type="button" class="btn-borrar" onclick="borrarPregunta('${tema}', ${i})">Borrar</button>
     `;

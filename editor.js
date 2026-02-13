@@ -233,7 +233,7 @@ function guardarPregunta() {
 
   // MODO EDICIÓN
   if (editando) {
-    const { tema: temaOriginal, index } = editando;
+    const { tema: temaOriginal, index, id } = editando;
     const original = banco[temaOriginal][index];
 
     const actualizada = {
@@ -249,8 +249,8 @@ function guardarPregunta() {
     banco[temaOriginal][index] = actualizada;
 
     // Sincronizar con Firebase si tiene id
-    if (actualizada.id && window.actualizarPreguntaFirebase) {
-      window.actualizarPreguntaFirebase(actualizada.id, {
+    if (id && window.actualizarPreguntaFirebase) {
+      window.actualizarPreguntaFirebase(id, {
         tema: temaOriginal,
         pregunta,
         opciones,
@@ -404,7 +404,7 @@ function mostrarPreguntas() {
 
 function cargarParaEditar(tema, index) {
   const p = banco[tema][index];
-  editando = { tema, index };
+  editando = { tema, index, id: p.id || null };
 
   document.getElementById("tema").value = tema;
   // === Cargar subtema en el formulario ===

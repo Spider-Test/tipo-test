@@ -703,22 +703,23 @@ function cargarSubtemasEliminar() {
   // Activar o desactivar botón según si hay un subtema seleccionado
   const botonEliminar = document.querySelector("button[onclick='borrarSubtemaDesdeGestion()']");
   if (botonEliminar) {
-    const actualizarEstadoBoton = () => {
-      const subtemaSeleccionado = subtemaSelect.value;
-      const activo = Boolean(subtemaSeleccionado);
+    const subtemaSeleccionado = subtemaSelect.value;
+    const activo = Boolean(subtemaSeleccionado);
 
-      botonEliminar.disabled = !activo;
-      botonEliminar.style.opacity = activo ? "1" : "0.5";
-      botonEliminar.style.cursor = activo ? "pointer" : "not-allowed";
-      botonEliminar.style.pointerEvents = activo ? "auto" : "none";
-    };
+    botonEliminar.disabled = !activo;
 
-    // Estado inicial
-    actualizarEstadoBoton();
-
-    // Escuchar cambios reales del selector
-    subtemaSelect.onchange = actualizarEstadoBoton;
+    if (activo) {
+      botonEliminar.style.opacity = "1";
+      botonEliminar.style.cursor = "pointer";
+      botonEliminar.style.pointerEvents = "auto";
+    } else {
+      botonEliminar.style.opacity = "0.5";
+      botonEliminar.style.cursor = "not-allowed";
+      botonEliminar.style.pointerEvents = "none";
+    }
   }
+  // Añadir listener para actualizar el botón cuando cambie el subtema
+  subtemaSelect.onchange = cargarSubtemasEliminar;
 }
 
 // ====== VALIDACIÓN DE FORMULARIO (activar/desactivar botón) ======
@@ -1344,20 +1345,6 @@ function crearTemaEstructura() {
     banco[tema] = [];
     guardarBanco();
     if (window.crearBackupAutomatico) window.crearBackupAutomatico(banco);
-
-    // Sincronizar tema vacío en Firebase (pregunta ficticia)
-    if (window.guardarEnFirebase) {
-      window.guardarEnFirebase({
-        tema: tema,
-        subtema: "General",
-        pregunta: "__temaVacio__",
-        opciones: [""],
-        correcta: 0,
-        feedback: "",
-        fecha: Date.now(),
-        __temaVacio: true
-      });
-    }
   }
 
   input.value = "";
@@ -1389,7 +1376,7 @@ function crearSubtemaVacio() {
   if (!banco[tema]) banco[tema] = [];
 
   // Crear pregunta ficticia para mantener el subtema
-  const preguntaFicticia = {
+  banco[tema].push({
     pregunta: "__subtemaVacio__",
     opciones: [""],
     correcta: 0,
@@ -1397,23 +1384,7 @@ function crearSubtemaVacio() {
     feedback: "",
     subtema: subtema,
     __subtemaVacio: true
-  };
-
-  banco[tema].push(preguntaFicticia);
-
-  // Sincronizar en Firebase
-  if (window.guardarEnFirebase) {
-    window.guardarEnFirebase({
-      tema: tema,
-      subtema: subtema,
-      pregunta: "__subtemaVacio__",
-      opciones: [""],
-      correcta: 0,
-      feedback: "",
-      fecha: Date.now(),
-      __subtemaVacio: true
-    });
-  }
+  });
 
   guardarBanco();
   if (window.crearBackupAutomatico) window.crearBackupAutomatico(banco);

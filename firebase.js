@@ -1,3 +1,4 @@
+
 const firebaseConfig = {
   apiKey: "AIzaSyBQw64gv58J684nbD1QIAqkrIPkbVg_8DU",
   authDomain: "tipo-test-a5e4d.firebaseapp.com",
@@ -10,6 +11,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
+window.db = db;
 
 auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
   .then(() => {
@@ -25,7 +27,7 @@ onAuthStateChanged(auth, (user) => {
   usuarioActual = user;
 });
 
-async function guardarEnFirebase(pregunta) {
+export async function guardarEnFirebase(pregunta) {
   try {
     await addDoc(collection(db, "preguntas"), pregunta);
     console.log("Pregunta guardada en Firebase");
@@ -35,7 +37,7 @@ async function guardarEnFirebase(pregunta) {
 }
 window.guardarEnFirebase = guardarEnFirebase;
 
-async function cargarDesdeFirebase() {
+export async function cargarDesdeFirebase() {
   const snapshot = await getDocs(collection(db, "preguntas"));
   const banco = {};
 
@@ -59,7 +61,7 @@ async function cargarDesdeFirebase() {
   return banco;
 }
 
-async function actualizarFallada(id, nuevoValor) {
+export async function actualizarFallada(id, nuevoValor) {
   try {
     console.log("Actualizando fallos en Firebase", id, nuevoValor);
     const ref = doc(db, "preguntas", id);
@@ -83,7 +85,7 @@ async function actualizarFallada(id, nuevoValor) {
 window.cargarDesdeFirebase = cargarDesdeFirebase;
 window.actualizarFallada = actualizarFallada;
 
-async function eliminarPreguntaFirebase(id) {
+export async function eliminarPreguntaFirebase(id) {
   try {
     const ref = doc(db, "preguntas", id);
     await deleteDoc(ref);
@@ -95,7 +97,7 @@ async function eliminarPreguntaFirebase(id) {
 
 window.eliminarPreguntaFirebase = eliminarPreguntaFirebase;
 
-async function actualizarPreguntaFirebase(id, datos) {
+export async function actualizarPreguntaFirebase(id, datos) {
   try {
     if (!id) {
       console.warn("ID inválido para actualización:", id);
@@ -112,7 +114,7 @@ async function actualizarPreguntaFirebase(id, datos) {
 
 window.actualizarPreguntaFirebase = actualizarPreguntaFirebase;
 
-async function crearBackupAutomatico(banco) {
+export async function crearBackupAutomatico(banco) {
   try {
     const fecha = new Date();
 
@@ -149,6 +151,7 @@ async function crearBackupAutomatico(banco) {
 window.crearBackupAutomatico = crearBackupAutomatico;
 
 // ===== PROGRESO DE TEST SINCRONIZADO =====
+
 
 window.guardarProgresoRemoto = async function (progreso) {
   try {

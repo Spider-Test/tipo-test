@@ -663,6 +663,67 @@ function cargarSubtemasEliminar() {
     });
 }
 
+// ====== ELIMINAR SUBTEMA ======
+function borrarSubtema() {
+  const temaSelect = document.getElementById("temaEliminar");
+  const subtemaSelect = document.getElementById("subtemaEliminar");
+
+  if (!temaSelect || !subtemaSelect) return;
+
+  const tema = temaSelect.value;
+  const subtema = subtemaSelect.value;
+
+  if (!tema) {
+    alert("Selecciona un tema primero");
+    return;
+  }
+
+  if (!subtema) {
+    alert("Selecciona un subtema primero");
+    return;
+  }
+
+  if (!confirm(`¿Seguro que quieres borrar el subtema "${subtema}" y todas sus preguntas?`)) {
+    return;
+  }
+
+  const preguntas = banco[tema] || [];
+
+  // Filtrar preguntas que no sean del subtema a borrar
+  const restantes = [];
+
+  preguntas.forEach(p => {
+    const st = p.subtema || "General";
+    if (st === subtema) {
+      // Borrar en Firebase si tiene id
+      if (p.id && window.eliminarPreguntaFirebase) {
+        window.eliminarPreguntaFirebase(p.id);
+      }
+    } else {
+      restantes.push(p);
+    }
+  });
+
+  if (restantes.length > 0) {
+    banco[tema] = restantes;
+  } else {
+    delete banco[tema];
+  }
+
+  guardarBanco();
+  if (window.crearBackupAutomatico) window.crearBackupAutomatico(banco);
+
+  limpiarTemasVacios();
+  cargarTemasVista();
+  cargarTemasExistentes();
+  cargarSelectEliminar();
+
+  alert(`Subtema "${subtema}" eliminado correctamente`);
+}
+
+// Exponer función al HTML
+window.borrarSubtema = borrarSubtema;
+
 // ====== VALIDACIÓN DE FORMULARIO (activar/desactivar botón) ======
 function prepararValidacionFormulario() {
   const campos = [

@@ -723,6 +723,7 @@ function borrarSubtema() {
 
 // Exponer función al HTML
 window.borrarSubtema = borrarSubtema;
+window.borrarSubtemasDeGestion = borrarSubtema;
 
 // ====== VALIDACIÓN DE FORMULARIO (activar/desactivar botón) ======
 function prepararValidacionFormulario() {

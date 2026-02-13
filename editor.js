@@ -885,20 +885,24 @@ function renombrarTema() {
 
   guardarBanco();
   if (window.crearBackupAutomatico) window.crearBackupAutomatico(banco);
-  cargarTemasVista();
+
+  // Refresco completo del editor
   cargarTemasExistentes();
+  cargarTemasVista();
+  cargarSubtemasVista();
   cargarSelectEliminar();
   cargarSelectRenombrar();
-  cargarSubtemasVista();
+  cargarTemasRenombrarSubtema();
   mostrarPreguntas();
 
-  // Refresco adicional tras sincronización con Firebase
+  // Segundo refresco tras sincronización con Firebase
   setTimeout(() => {
-    cargarTemasVista();
     cargarTemasExistentes();
+    cargarTemasVista();
+    cargarSubtemasVista();
     cargarSelectEliminar();
     cargarSelectRenombrar();
-    cargarSubtemasVista();
+    cargarTemasRenombrarSubtema();
     mostrarPreguntas();
   }, 400);
 

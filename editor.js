@@ -290,6 +290,24 @@ function guardarPregunta() {
         fecha: Date.now()
       });
     }
+    // Asegurar que el subtema exista en la estructura oficial
+    if (window.cargarEstructuraTemas && window.firebase && subtema) {
+      window.cargarEstructuraTemas().then(async estructura => {
+        const subtemas = estructura[tema] || [];
+
+        if (!subtemas.includes(subtema)) {
+          const ref = window.firebase.firestore().collection("estructuraTemas").doc(tema);
+
+          if (subtemas.length === 0) {
+            await ref.set({ subtemas: [subtema] });
+          } else {
+            await ref.update({
+              subtemas: [...subtemas, subtema]
+            });
+          }
+        }
+      });
+    }
   }
 
   guardarBanco();

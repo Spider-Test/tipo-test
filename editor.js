@@ -889,6 +889,8 @@ function renombrarTema() {
   cargarTemasExistentes();
   cargarSelectEliminar();
   cargarSelectRenombrar();
+  cargarSubtemasVista();
+  mostrarPreguntas();
 
   input.value = "";
   alert(`Tema renombrado a "${temaNuevo}"`);

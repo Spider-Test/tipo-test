@@ -76,6 +76,8 @@ function initEditor() {
 
         // Guardar copia local para modo offline
         localStorage.setItem(STORAGE_KEY, JSON.stringify(banco));
+        // Actualizar selector de temas en el editor
+        cargarTemasVista();
       })
       .catch(() => {
         console.log("Sin conexión, usando copia local (editor)");

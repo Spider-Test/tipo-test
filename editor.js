@@ -310,25 +310,25 @@ function guardarPregunta() {
 }
 
 /* ====== VISTA AVANZADA ====== */
-function cargarTemasVista() {
+async function cargarTemasVista() {
   const select = document.getElementById("temaVista");
   if (!select) return;
 
   select.innerHTML = "";
-  ordenarNatural(Object.keys(banco).filter(t => t !== "__falladas__"))
-    .forEach(tema => {
-      const opt = document.createElement("option");
-      opt.value = tema;
-      opt.textContent = tema;
-      select.appendChild(opt);
-    });
 
-  select.onchange = () => {
+  const temas = await obtenerTemas();
+
+  temas.forEach(tema => {
+    const option = document.createElement("option");
+    option.value = tema;
+    option.textContent = tema;
+    select.appendChild(option);
+  });
+
+  if (temas.length > 0) {
     cargarSubtemasVista();
     mostrarPreguntas();
-  };
-  cargarSubtemasVista();
-  mostrarPreguntas();
+  }
 }
 
 function mostrarPreguntas() {
@@ -1037,7 +1037,31 @@ document.addEventListener("DOMContentLoaded", () => {
     if (btnGuardar) btnGuardar.textContent = "Guardar pregunta";
   });
 });
+
 // ====== SUBTEMAS EN VISTA AVANZADA ======
+
+async function obtenerTemas() {
+  const temas = new Set(Object.keys(banco));
+
+  // Quitar especiales
+  temas.delete("__falladas__");
+
+  // Añadir temas de estructura
+  if (window.cargarEstructuraTemas) {
+    try {
+      const estructura = await window.cargarEstructuraTemas();
+      if (estructura) {
+        Object.keys(estructura).forEach(t => temas.add(t));
+      }
+    } catch (e) {
+      console.warn("No se pudo cargar estructuraTemas", e);
+    }
+  }
+
+  return Array.from(temas).sort((a, b) =>
+    a.localeCompare(b, "es", { sensitivity: "base" })
+  );
+}
 
 async function obtenerSubtemas(tema) {
   const subtemas = new Set();

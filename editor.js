@@ -352,8 +352,12 @@ function cargarTemasVista() {
     cargarSubtemasVista();
     mostrarPreguntas();
   };
-  cargarSubtemasVista();
-  mostrarPreguntas();
+
+  // Forzar carga inicial de subtemas tras renderizar temas
+  setTimeout(() => {
+    cargarSubtemasVista();
+    mostrarPreguntas();
+  }, 0);
 }
 
 function mostrarPreguntas() {

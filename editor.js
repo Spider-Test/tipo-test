@@ -566,7 +566,8 @@ function limpiarFormulario() {
 
 function limpiarTemasVacios() {
   Object.keys(banco).forEach(tema => {
-    if (!tema || !Array.isArray(banco[tema]) || banco[tema].length === 0) {
+    // Solo borrar temas sin nombre o inválidos, pero NO borrar temas vacíos
+    if (!tema) {
       delete banco[tema];
     }
   });

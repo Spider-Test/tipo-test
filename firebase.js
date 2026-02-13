@@ -129,7 +129,9 @@ export async function cargarEstructuraTemas() {
   return estructura;
 }
 
-window.cargarEstructuraTemas = cargarEstructuraTemas;
+if (typeof window !== "undefined") {
+  window.cargarEstructuraTemas = cargarEstructuraTemas;
+}
 
 export async function crearBackupAutomatico(banco) {
   try {

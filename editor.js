@@ -892,6 +892,16 @@ function renombrarTema() {
   cargarSubtemasVista();
   mostrarPreguntas();
 
+  // Refresco adicional tras sincronización con Firebase
+  setTimeout(() => {
+    cargarTemasVista();
+    cargarTemasExistentes();
+    cargarSelectEliminar();
+    cargarSelectRenombrar();
+    cargarSubtemasVista();
+    mostrarPreguntas();
+  }, 400);
+
   input.value = "";
   alert(`Tema renombrado a "${temaNuevo}"`);
 }

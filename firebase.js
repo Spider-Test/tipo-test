@@ -98,6 +98,23 @@ export async function eliminarPreguntaFirebase(id) {
 
 window.eliminarPreguntaFirebase = eliminarPreguntaFirebase;
 
+export async function actualizarPreguntaFirebase(id, datos) {
+  try {
+    if (!id) {
+      console.warn("ID inválido para actualización:", id);
+      return;
+    }
+
+    const ref = doc(db, "preguntas", id);
+    await updateDoc(ref, datos);
+    console.log("Pregunta actualizada en Firebase:", id);
+  } catch (err) {
+    console.error("Error al actualizar pregunta en Firebase", err);
+  }
+}
+
+window.actualizarPreguntaFirebase = actualizarPreguntaFirebase;
+
 export async function crearBackupAutomatico(banco) {
   try {
     const fecha = new Date();

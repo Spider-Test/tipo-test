@@ -157,6 +157,16 @@ document.addEventListener("DOMContentLoaded", async () => {
       banco = await window.cargarDesdeFirebase();
       console.log("Banco cargado desde Firebase (test)");
 
+      // Asegurar que todas las preguntas tengan subtema
+      Object.keys(banco).forEach(tema => {
+        if (!Array.isArray(banco[tema])) return;
+        banco[tema].forEach(p => {
+          if (!p.subtema) {
+            p.subtema = "General";
+          }
+        });
+      });
+
       // Guardar copia local para modo offline
       localStorage.setItem(STORAGE_KEY, JSON.stringify(banco));
     } else {
@@ -1693,6 +1703,7 @@ function actualizarEstadoBotonEmpezar() {
     tooltip.style.display = hayModoActivo ? "none" : "block";
   }
 }
+
 // ===== AUTOGUARDADO PERIÓDICO DEL PROGRESO =====
 function autoGuardarProgreso() {
   const zonaTest = document.getElementById("zonaTest");
@@ -1740,3 +1751,4 @@ window.addEventListener("beforeunload", function (e) {
 window.mostrarPantallaInicial = mostrarPantallaInicial;
 window.mostrarPantallaTemas = mostrarPantallaTemas;
 window.mostrarPantallaHistorial = mostrarPantallaHistorial;
+window.iniciarTest = iniciarTest;

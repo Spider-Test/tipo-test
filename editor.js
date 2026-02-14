@@ -1779,18 +1779,43 @@ async function cargarPapelera() {
       const div = document.createElement("div");
       div.style.margin = "8px 0";
 
-      const btn = document.createElement("button");
-      btn.textContent = "Restaurar";
-      btn.style.marginLeft = "8px";
+      const btnRestaurar = document.createElement("button");
+      btnRestaurar.textContent = "Restaurar";
+      btnRestaurar.style.marginLeft = "8px";
+
+      const btnEliminar = document.createElement("button");
+      btnEliminar.textContent = "Eliminar definitivamente";
+      btnEliminar.style.marginLeft = "8px";
+      btnEliminar.style.background = "#c0392b";
+      btnEliminar.style.color = "white";
+
+      btnEliminar.onclick = async () => {
+        if (!confirm("¿Eliminar definitivamente este elemento de la papelera?")) return;
+        await window.deleteDoc(
+          window.doc(window.db, "Papelera", docSnap.id)
+        );
+        cargarPapelera();
+      };
 
       if (data.tipo === "pregunta") {
-        btn.onclick = () => restaurarPregunta(docSnap.id, data);
+        btnRestaurar.onclick = () => restaurarPregunta(docSnap.id, data);
         div.innerHTML = "<strong>Pregunta:</strong> " + (data.nombre || "(sin texto)");
       } else {
-        btn.onclick = () => restaurarTema(docSnap.id, data);
-        div.innerHTML = "<strong>Tema:</strong> " + (data.nombre || "(sin nombre)");
+        btnRestaurar.onclick = () => restaurarTema(docSnap.id, data);
+
+        let subtemasTexto = "";
+        if (data.datos && Array.isArray(data.datos.subtemas) && data.datos.subtemas.length) {
+          const nombres = data.datos.subtemas.map(st => st.nombre).join(", ");
+          subtemasTexto = `<div style=\"font-size:12px;opacity:0.7;\"><strong>Subtemas:</strong> ${nombres}</div>`;
+        }
+
+        div.innerHTML =
+          "<strong>Tema:</strong> " + (data.nombre || "(sin nombre)") +
+          subtemasTexto;
       }
-      div.appendChild(btn);
+
+      div.appendChild(btnRestaurar);
+      div.appendChild(btnEliminar);
       cont.appendChild(div);
     }
   } catch (err) {

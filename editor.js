@@ -559,43 +559,69 @@ function limpiarTemasVacios() {
 async function cargarTemasExistentes() {
   const selectExistente = document.getElementById("temaExistente");
   const selectTema = document.getElementById("tema");
-  if ((!selectExistente && !selectTema) || !window.db) return;
-
-  const dbRef = window.db;
+  if ((!selectExistente && !selectTema)) return;
 
   if (selectExistente) {
     selectExistente.innerHTML = "<option value=''>-- seleccionar --</option>";
   }
 
   try {
-    const snapshot = await window.db.collection("Temas").get();
+    let temas = [];
 
-    if (selectTema) {
-      selectTema.innerHTML = "";
+    if (window.db && window.db.collection) {
+      const snapshot = await window.db.collection("Temas").get();
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        if (data && data.nombre) temas.push(data.nombre);
+      });
     }
 
-    snapshot.forEach(doc => {
-      const data = doc.data();
+    // Fallback: usar temas del banco local si Firebase falla o está vacío
+    if (temas.length === 0) {
+      temas = Object.keys(banco || {});
+    }
 
+    if (selectTema) selectTema.innerHTML = "";
+
+    temas.forEach(nombre => {
       if (selectExistente) {
         const opt1 = document.createElement("option");
-        opt1.value = data.nombre;
-        opt1.textContent = data.nombre;
+        opt1.value = nombre;
+        opt1.textContent = nombre;
         selectExistente.appendChild(opt1);
       }
 
       if (selectTema) {
         const opt2 = document.createElement("option");
-        opt2.value = data.nombre;
-        opt2.textContent = data.nombre;
+        opt2.value = nombre;
+        opt2.textContent = nombre;
         selectTema.appendChild(opt2);
       }
     });
 
   } catch (err) {
     console.error("Error cargando temas:", err);
-  }
 
+    // Fallback total a banco local
+    const temas = Object.keys(banco || {});
+    if (selectTema) selectTema.innerHTML = "";
+
+    temas.forEach(nombre => {
+      if (selectExistente) {
+        const opt1 = document.createElement("option");
+        opt1.value = nombre;
+        opt1.textContent = nombre;
+        selectExistente.appendChild(opt1);
+      }
+
+      if (selectTema) {
+        const opt2 = document.createElement("option");
+        opt2.value = nombre;
+        opt2.textContent = nombre;
+        selectTema.appendChild(opt2);
+      }
+    });
+  }
   controlarInputTema();
 }
 

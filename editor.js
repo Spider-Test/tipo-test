@@ -325,20 +325,47 @@ function cargarTemasVista() {
   if (!select) return;
 
   select.innerHTML = "";
-  ordenarNatural(Object.keys(banco).filter(t => t !== "__falladas__"))
-    .forEach(tema => {
+
+  const temasLocal = Object.keys(banco).filter(t => t !== "__falladas__");
+
+  let temasFirebase = [];
+  if (window.db && window.getDocs && window.collection) {
+    // Carga asíncrona de Firebase sin bloquear
+    window.getDocs(window.collection(window.db, "Temas"))
+      .then(snapshot => {
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          if (data && data.nombre) temasFirebase.push(data.nombre);
+        });
+
+        rellenarSelectTemas([...temasLocal, ...temasFirebase]);
+      })
+      .catch(() => {
+        rellenarSelectTemas(temasLocal);
+      });
+  } else {
+    rellenarSelectTemas(temasLocal);
+  }
+
+  function rellenarSelectTemas(lista) {
+    const temas = ordenarNatural(Array.from(new Set(lista)));
+
+    select.innerHTML = "";
+    temas.forEach(tema => {
       const opt = document.createElement("option");
       opt.value = tema;
       opt.textContent = tema;
       select.appendChild(opt);
     });
 
-  select.onchange = () => {
+    select.onchange = () => {
+      cargarSubtemasVista();
+      mostrarPreguntas();
+    };
+
     cargarSubtemasVista();
     mostrarPreguntas();
-  };
-  cargarSubtemasVista();
-  mostrarPreguntas();
+  }
 }
 
 function mostrarPreguntas() {

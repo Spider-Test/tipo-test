@@ -1,3 +1,5 @@
+import { db } from "./firebase.js";
+import { collection, getDocs } from "firebase/firestore";
 /* ====== CARGA DEL BANCO ====== */
 const STORAGE_KEY = "bancoPreguntas";
 

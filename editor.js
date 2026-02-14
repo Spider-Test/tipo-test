@@ -1327,6 +1327,9 @@ async function cargarSubtemasVista() {
     subtemas = Array.from(set);
   }
 
+  // Eliminar duplicados finales
+  subtemas = Array.from(new Set(subtemas));
+
   subtemas
     .sort((a, b) => a.localeCompare(b, "es", { sensitivity: "base" }))
     .forEach(st => {

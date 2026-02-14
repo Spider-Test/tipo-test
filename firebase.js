@@ -215,7 +215,9 @@ async function migrarEstructuraReal() {
     // Crear subtemas
     for (const key in subtemas) {
       const { tema, subtema } = subtemas[key];
-      const id = tema + "__" + subtema;
+      const safeTema = tema.replaceAll("/", "_");
+      const safeSubtema = subtema.replaceAll("/", "_");
+      const id = safeTema + "__" + safeSubtema;
 
       await setDoc(doc(db, "Subtemas", id), {
         nombre: subtema,

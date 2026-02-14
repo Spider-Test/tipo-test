@@ -737,9 +737,9 @@ async function cargarSubtemasEliminar() {
     console.error("Error cargando subtemas para eliminar:", err);
   }
 
-  // Fallback al banco local
-  if (subtemas.length === 0 && banco[tema]) {
-    const set = new Set();
+  // Mezclar subtemas de banco local
+  if (banco[tema]) {
+    const set = new Set(subtemas);
     banco[tema].forEach(p => {
       set.add(p.subtema || "General");
     });
@@ -1098,10 +1098,12 @@ async function cargarSubtemasRenombrar() {
     console.error("Error cargando subtemas para renombrar:", err);
   }
 
-  // Fallback al banco local
-  if (subtemas.length === 0 && banco[tema]) {
-    const set = new Set();
-    banco[tema].forEach(p => set.add(p.subtema || "General"));
+  // Mezclar subtemas de banco local
+  if (banco[tema]) {
+    const set = new Set(subtemas);
+    banco[tema].forEach(p => {
+      set.add(p.subtema || "General");
+    });
     subtemas = Array.from(set);
   }
 
@@ -1242,9 +1244,9 @@ async function cargarSubtemasPorTema() {
     console.error("Error cargando subtemas por tema:", err);
   }
 
-  // Fallback al banco local
-  if (subtemas.length === 0 && banco[tema]) {
-    const set = new Set();
+  // Mezclar subtemas de banco local
+  if (banco[tema]) {
+    const set = new Set(subtemas);
     banco[tema].forEach(p => {
       if (p.subtema) set.add(p.subtema);
     });
@@ -1316,9 +1318,9 @@ async function cargarSubtemasVista() {
     console.error("Error cargando subtemas desde Firebase:", err);
   }
 
-  // Fallback al banco local
-  if (subtemas.length === 0 && banco[tema]) {
-    const set = new Set();
+  // Mezclar subtemas de banco local
+  if (banco[tema]) {
+    const set = new Set(subtemas);
     banco[tema].forEach(p => {
       set.add(p.subtema || "General");
     });
@@ -1405,10 +1407,12 @@ async function cargarSubtemasMover() {
     console.error("Error cargando subtemas para mover:", err);
   }
 
-  // Fallback al banco local
-  if (subtemas.length === 0 && banco[tema]) {
-    const set = new Set();
-    banco[tema].forEach(p => set.add(p.subtema || "General"));
+  // Mezclar subtemas de banco local
+  if (banco[tema]) {
+    const set = new Set(subtemas);
+    banco[tema].forEach(p => {
+      set.add(p.subtema || "General");
+    });
     subtemas = Array.from(set);
   }
 

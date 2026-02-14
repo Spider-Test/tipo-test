@@ -1418,7 +1418,7 @@ async function crearTemaVacio() {
     return;
   }
 
-  if (!window.db || !window.db.collection) {
+  if (!window.db || !window.setDoc || !window.doc) {
     alert("Firebase no está disponible");
     return;
   }
@@ -1426,9 +1426,10 @@ async function crearTemaVacio() {
   try {
     const id = nombre.replaceAll("/", "_");
 
-    await window.db.collection("Temas").doc(id).set({
-      nombre: nombre
-    });
+    await window.setDoc(
+      window.doc(window.db, "Temas", id),
+      { nombre: nombre }
+    );
 
     alert("Tema creado correctamente");
     input.value = "";

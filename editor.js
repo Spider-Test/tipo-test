@@ -1406,3 +1406,64 @@ document.addEventListener("DOMContentLoaded", () => {
   subtemaMover && subtemaMover.addEventListener("change", cargarPreguntasMover);
   nuevoTemaMover && nuevoTemaMover.addEventListener("change", cargarSubtemasDestinoMover);
 });
+
+// ====== GESTIÓN DIRECTA DE TEMAS (COLECCIÓN Temas) ======
+async function crearTemaVacio() {
+  const input = document.getElementById("nuevoTemaVacio");
+  if (!input) return;
+
+  const nombre = input.value.trim();
+  if (!nombre) {
+    alert("Escribe el nombre del tema");
+    return;
+  }
+
+  try {
+    if (window.db && window.db.collection) {
+      const id = nombre.replaceAll("/", "_");
+      await window.db.collection("Temas").doc(id).set({
+        nombre: nombre
+      });
+
+      alert("Tema creado correctamente");
+      input.value = "";
+      cargarTemasExistentes();
+      cargarTemasMover();
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Error al crear el tema");
+  }
+}
+
+async function eliminarTemaFirestore() {
+  const select = document.getElementById("temaExistente");
+  if (!select) return;
+
+  const nombre = select.value;
+  if (!nombre) {
+    alert("Selecciona un tema");
+    return;
+  }
+
+  if (!confirm(`¿Seguro que quieres eliminar el tema "${nombre}" de la colección Temas?`)) {
+    return;
+  }
+
+  try {
+    if (window.db && window.db.collection) {
+      const id = nombre.replaceAll("/", "_");
+      await window.db.collection("Temas").doc(id).delete();
+
+      alert("Tema eliminado de la colección Temas");
+      cargarTemasExistentes();
+      cargarTemasMover();
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Error al eliminar el tema");
+  }
+}
+
+window.crearTemaVacio = crearTemaVacio;
+window.eliminarTemaFirestore = eliminarTemaFirestore;

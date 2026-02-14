@@ -1298,39 +1298,14 @@ async function cargarSubtemasVista() {
   const tema = selectTema.value;
   selectSubtema.innerHTML = "<option value=''>Todos los subtemas</option>";
 
-  if (!tema) return;
+  if (!tema || !banco[tema]) return;
 
-  let subtemas = [];
+  const subtemas = new Set();
+  banco[tema].forEach(p => {
+    subtemas.add(p.subtema || "General");
+  });
 
-  try {
-    if (window.db && window.getDocs && window.collection) {
-      const snapshot = await window.getDocs(
-        window.collection(window.db, "Subtemas")
-      );
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        if (data && data.temaId === tema && data.nombre) {
-          subtemas.push(data.nombre);
-        }
-      });
-    }
-  } catch (err) {
-    console.error("Error cargando subtemas desde Firebase:", err);
-  }
-
-  // Mezclar subtemas de banco local
-  if (banco[tema]) {
-    const set = new Set(subtemas);
-    banco[tema].forEach(p => {
-      set.add(p.subtema || "General");
-    });
-    subtemas = Array.from(set);
-  }
-
-  // Eliminar duplicados finales
-  subtemas = Array.from(new Set(subtemas));
-
-  subtemas
+  Array.from(subtemas)
     .sort((a, b) => a.localeCompare(b, "es", { sensitivity: "base" }))
     .forEach(st => {
       const opt = document.createElement("option");

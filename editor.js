@@ -1668,6 +1668,73 @@ async function borrarTemaCompleto() {
 
 // Exponer al HTML
 window.borrarTemaCompleto = borrarTemaCompleto;
+
+// ====== ENVIAR TEMA A PAPELERA ======
+async function enviarTemaAPapelera() {
+  const select = document.getElementById("temaEliminar");
+  if (!select) return;
+
+  const tema = select.value;
+  if (!tema) {
+    alert("Selecciona un tema primero");
+    return;
+  }
+
+  if (!confirm(`El tema "${tema}" se moverá a la papelera. ¿Continuar?`)) {
+    return;
+  }
+
+  const preguntas = banco[tema] || [];
+
+  // Obtener subtemas del tema
+  let subtemas = [];
+  try {
+    if (window.db && window.getDocs && window.collection) {
+      const snap = await window.getDocs(
+        window.collection(window.db, "Subtemas")
+      );
+      snap.forEach(docSnap => {
+        const data = docSnap.data();
+        if (data && data.temaId === tema) {
+          subtemas.push(data);
+        }
+      });
+    }
+  } catch (err) {
+    console.error("Error obteniendo subtemas:", err);
+  }
+
+  // Guardar en papelera
+  try {
+    if (window.db && window.addDoc && window.collection) {
+      await window.addDoc(
+        window.collection(window.db, "Papelera"),
+        {
+          tipo: "tema",
+          nombre: tema,
+          fecha: Date.now(),
+          datos: {
+            tema,
+            subtemas,
+            preguntas
+          }
+        }
+      );
+    }
+  } catch (err) {
+    console.error("Error enviando a papelera:", err);
+    alert("Error al mover a papelera");
+    return;
+  }
+
+  // Borrar definitivamente del sistema principal
+  await borrarTemaCompleto();
+
+  alert(`Tema "${tema}" movido a la papelera`);
+}
+
+// Exponer al HTML
+window.enviarTemaAPapelera = enviarTemaAPapelera;
 // ====== CREAR SUBTEMA VACÍO ======
 async function crearSubtemaVacio() {
   const temaSelect = document.getElementById("temaParaSubtema");

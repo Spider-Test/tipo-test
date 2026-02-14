@@ -1249,6 +1249,9 @@ async function cargarSubtemasPorTema() {
     subtemas = Array.from(set);
   }
 
+  // Eliminar duplicados
+  subtemas = Array.from(new Set(subtemas));
+
   subtemas
     .sort((a, b) => {
       if (a.toLowerCase() === "general") return -1;

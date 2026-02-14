@@ -339,6 +339,19 @@ body {
   Eliminar tema
 </button>
 
+<hr style="margin:20px 0;">
+
+<h3>Crear tema vacío</h3>
+<label>Nombre del nuevo tema:</label><br>
+<input type="text" id="nuevoTemaVacio" placeholder="Nombre del tema"><br><br>
+<button type="button" onclick="crearTemaVacio()">
+  Crear tema
+</button>
+
+<button type="button" onclick="eliminarTemaFirestore()" style="background:rgba(0,0,0,0.08); color:var(--text-main); box-shadow:none; margin-left:8px;">
+  Eliminar tema de la colección Temas
+</button>
+
 </div>
 </details>
 <hr style="margin:20px 0;">

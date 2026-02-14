@@ -810,19 +810,17 @@ async function borrarSubtema() {
   guardarBanco();
   if (window.crearBackupAutomatico) window.crearBackupAutomatico(banco);
 
-  // Eliminar subtema en Firestore (búsqueda por campos)
+  // Eliminar subtema en Firestore por ID directo
   try {
-    if (window.db && window.getDocs && window.collection && window.deleteDoc) {
-      const snap = await window.getDocs(
-        window.collection(window.db, "Subtemas")
-      );
+    if (window.db && window.doc && window.deleteDoc) {
+      const id =
+        tema.replaceAll("/", "_") +
+        "__" +
+        subtema.replaceAll("/", "_");
 
-      for (const docSnap of snap.docs) {
-        const data = docSnap.data();
-        if (data && data.temaId === tema && data.nombre === subtema) {
-          await window.deleteDoc(docSnap.ref);
-        }
-      }
+      await window.deleteDoc(
+        window.doc(window.db, "Subtemas", id)
+      );
     }
   } catch (err) {
     console.error("Error eliminando subtema en Firebase:", err);

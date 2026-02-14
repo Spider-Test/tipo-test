@@ -1744,6 +1744,11 @@ async function cargarPapelera() {
   cont.innerHTML = "Cargando…";
 
   try {
+    if (!window.db || !window.getDocs || !window.collection) {
+      cont.textContent = "Firebase no está disponible";
+      return;
+    }
+
     const snap = await window.getDocs(
       window.collection(window.db, "Papelera")
     );

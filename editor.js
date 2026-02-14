@@ -1315,9 +1315,9 @@ async function cargarTemasMover() {
     console.error("Error cargando temas para mover:", err);
   }
 
-  // Mezclar temas de Firebase y banco local
+  // Mezclar temas de Firebase y banco local y eliminar duplicados
   const temasLocal = Object.keys(banco || {});
-  temas = Array.from(new Set([...temas, ...temasLocal]));
+  temas = ordenarNatural(Array.from(new Set([...temas, ...temasLocal])));
 
   temas.forEach(nombre => {
     const opt1 = document.createElement("option");

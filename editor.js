@@ -544,18 +544,26 @@ function limpiarTemasVacios() {
   guardarBanco();
 }
 
-function cargarTemasExistentes() {
+async function cargarTemasExistentes() {
   const select = document.getElementById("temaExistente");
-  if (!select) return;
+  if (!select || !window.db) return;
 
   select.innerHTML = "<option value=''>-- seleccionar --</option>";
 
-  ordenarNatural(Object.keys(banco).filter(t => t !== "__falladas__")).forEach(tema => {
-    const opt = document.createElement("option");
-    opt.value = tema;
-    opt.textContent = tema;
-    select.appendChild(opt);
-  });
+  try {
+    const snapshot = await db.collection("Temas").get();
+
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      const opt = document.createElement("option");
+      opt.value = data.nombre;
+      opt.textContent = data.nombre;
+      select.appendChild(opt);
+    });
+
+  } catch (err) {
+    console.error("Error cargando temas:", err);
+  }
 
   controlarInputTema();
 }

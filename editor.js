@@ -77,6 +77,7 @@ function initEditor() {
         actualizarOpciones();
         cargarTemasVista();
         cargarTemasExistentes();
+        cargarTemasParaSubtema();
         cargarSelectEliminar();
         cargarSelectRenombrar();
         cargarTemasRenombrarSubtema();
@@ -108,6 +109,7 @@ function initEditor() {
     actualizarOpciones();
     cargarTemasVista();
     cargarTemasExistentes();
+    cargarTemasParaSubtema();
     cargarSelectEliminar();
     cargarSelectRenombrar();
     cargarTemasRenombrarSubtema();
@@ -1507,7 +1509,7 @@ window.crearTemaVacio = crearTemaVacio;
 window.eliminarTemaFirestore = eliminarTemaFirestore;
 // ====== CREAR SUBTEMA VACÍO ======
 async function crearSubtemaVacio() {
-  const temaSelect = document.getElementById("temaExistente");
+  const temaSelect = document.getElementById("temaParaSubtema");
   const input = document.getElementById("nuevoSubtemaVacio");
 
   if (!temaSelect || !input) return;
@@ -1560,3 +1562,39 @@ async function crearSubtemaVacio() {
 }
 
 window.crearSubtemaVacio = crearSubtemaVacio;
+
+// ====== CARGAR TEMAS PARA CREAR SUBTEMA VACÍO ======
+async function cargarTemasParaSubtema() {
+  const select = document.getElementById("temaParaSubtema");
+  if (!select) return;
+
+  select.innerHTML = "<option value=''>-- seleccionar tema --</option>";
+
+  let temas = [];
+
+  try {
+    if (window.db && window.getDocs && window.collection) {
+      const snapshot = await window.getDocs(
+        window.collection(window.db, "Temas")
+      );
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        if (data && data.nombre) temas.push(data.nombre);
+      });
+    }
+  } catch (err) {
+    console.error("Error cargando temas para subtema vacío:", err);
+  }
+
+  // Fallback al banco local
+  if (temas.length === 0) {
+    temas = Object.keys(banco || {});
+  }
+
+  ordenarNatural(temas).forEach(tema => {
+    const opt = document.createElement("option");
+    opt.value = tema;
+    opt.textContent = tema;
+    select.appendChild(opt);
+  });
+}

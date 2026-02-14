@@ -551,10 +551,9 @@ async function cargarTemasExistentes() {
       });
     }
 
-    // Si Firebase no devuelve temas, usar banco local como respaldo
-    if (!temas || temas.length === 0) {
-      temas = Object.keys(banco || {});
-    }
+    // Mezclar siempre temas de Firebase y banco local
+    const temasLocal = Object.keys(banco || {});
+    temas = Array.from(new Set([...(temas || []), ...temasLocal]));
 
     if (selectTema) selectTema.innerHTML = "";
 

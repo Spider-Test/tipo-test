@@ -1094,13 +1094,33 @@ async function cargarSelectRenombrar() {
   });
 }
 
-function cargarTemasRenombrarSubtema() {
+async function cargarTemasRenombrarSubtema() {
   const select = document.getElementById("temaRenombrarSubtema");
   if (!select) return;
 
   select.innerHTML = "<option value=''>-- seleccionar tema --</option>";
 
-  ordenarNatural(Object.keys(banco)).forEach(tema => {
+  let temas = [];
+
+  try {
+    if (window.db && window.getDocs && window.collection) {
+      const snapshot = await window.getDocs(
+        window.collection(window.db, "Temas")
+      );
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        if (data && data.nombre) temas.push(data.nombre);
+      });
+    }
+  } catch (err) {
+    console.error("Error cargando temas para renombrar subtema:", err);
+  }
+
+  // Mezclar con banco local
+  const temasLocal = Object.keys(banco || {});
+  temas = Array.from(new Set([...temas, ...temasLocal]));
+
+  ordenarNatural(temas).forEach(tema => {
     if (tema === "__falladas__") return;
 
     const opt = document.createElement("option");

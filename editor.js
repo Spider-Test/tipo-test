@@ -1067,7 +1067,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-function cargarSubtemasRenombrar() {
+async function cargarSubtemasRenombrar() {
   const temaSelect = document.getElementById("temaRenombrarSubtema");
   const subtemaSelect = document.getElementById("subtemaRenombrar");
 
@@ -1076,14 +1076,34 @@ function cargarSubtemasRenombrar() {
   const tema = temaSelect.value;
   subtemaSelect.innerHTML = "<option value=''>-- seleccionar subtema --</option>";
 
-  if (!tema || !banco[tema]) return;
+  if (!tema) return;
 
-  const subtemas = new Set();
-  banco[tema].forEach(p => {
-    subtemas.add(p.subtema || "General");
-  });
+  let subtemas = [];
 
-  Array.from(subtemas)
+  try {
+    if (window.db && window.getDocs && window.collection) {
+      const snapshot = await window.getDocs(
+        window.collection(window.db, "Subtemas")
+      );
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        if (data && data.temaId === tema && data.nombre) {
+          subtemas.push(data.nombre);
+        }
+      });
+    }
+  } catch (err) {
+    console.error("Error cargando subtemas para renombrar:", err);
+  }
+
+  // Fallback al banco local
+  if (subtemas.length === 0 && banco[tema]) {
+    const set = new Set();
+    banco[tema].forEach(p => set.add(p.subtema || "General"));
+    subtemas = Array.from(set);
+  }
+
+  subtemas
     .sort((a, b) => {
       if (a.toLowerCase() === "general") return -1;
       if (b.toLowerCase() === "general") return 1;
@@ -1095,14 +1115,8 @@ function cargarSubtemasRenombrar() {
       opt.textContent = st;
       subtemaSelect.appendChild(opt);
     });
-  // Activar o desactivar botón de renombrar según selección
-  const botonRenombrar = document.querySelector("button[onclick='renombrarSubtema()']");
-  if (botonRenombrar) {
-    const activo = Boolean(subtemaSelect.value);
-    botonRenombrar.disabled = !activo;
-    botonRenombrar.style.opacity = activo ? "1" : "0.5";
-    botonRenombrar.style.cursor = activo ? "pointer" : "not-allowed";
-  }
+
+  validarRenombradoSubtema();
 }
 
 // Activar botón de renombrar subtema al cambiar selección
@@ -1197,7 +1211,7 @@ function validarRenombradoSubtema() {
   boton.style.cursor = valido ? "pointer" : "not-allowed";
 }
 // ====== SUBTEMAS POR TEMA ======
-function cargarSubtemasPorTema() {
+async function cargarSubtemasPorTema() {
   const selectTema = document.getElementById("temaExistente");
   const selectSubtema = document.getElementById("subtemaExistente");
 
@@ -1206,14 +1220,36 @@ function cargarSubtemasPorTema() {
   const tema = selectTema.value;
   selectSubtema.innerHTML = "<option value=''>-- seleccionar subtema --</option>";
 
-  if (!tema || !banco[tema]) return;
+  if (!tema) return;
 
-  const subtemas = new Set();
-  banco[tema].forEach(p => {
-    if (p.subtema) subtemas.add(p.subtema);
-  });
+  let subtemas = [];
 
-  Array.from(subtemas)
+  try {
+    if (window.db && window.getDocs && window.collection) {
+      const snapshot = await window.getDocs(
+        window.collection(window.db, "Subtemas")
+      );
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        if (data && data.temaId === tema && data.nombre) {
+          subtemas.push(data.nombre);
+        }
+      });
+    }
+  } catch (err) {
+    console.error("Error cargando subtemas por tema:", err);
+  }
+
+  // Fallback al banco local
+  if (subtemas.length === 0 && banco[tema]) {
+    const set = new Set();
+    banco[tema].forEach(p => {
+      if (p.subtema) set.add(p.subtema);
+    });
+    subtemas = Array.from(set);
+  }
+
+  subtemas
     .sort((a, b) => {
       if (a.toLowerCase() === "general") return -1;
       if (b.toLowerCase() === "general") return 1;

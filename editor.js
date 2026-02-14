@@ -1230,33 +1230,41 @@ function cargarSubtemasVista() {
 async function cargarTemasMover() {
   const selectTema = document.getElementById("temaMover");
   const selectNuevoTema = document.getElementById("nuevoTemaMover");
-  if (!selectTema || !selectNuevoTema || !window.db) return;
-
-  const dbRef = window.db;
+  if (!selectTema || !selectNuevoTema) return;
 
   selectTema.innerHTML = "<option value=''>-- seleccionar tema --</option>";
   selectNuevoTema.innerHTML = "<option value=''>-- seleccionar tema destino --</option>";
 
+  let temas = [];
+
   try {
-    const snapshot = await window.db.collection("Temas").get();
-
-    snapshot.forEach(doc => {
-      const data = doc.data();
-
-      const opt1 = document.createElement("option");
-      opt1.value = data.nombre;
-      opt1.textContent = data.nombre;
-      selectTema.appendChild(opt1);
-
-      const opt2 = document.createElement("option");
-      opt2.value = data.nombre;
-      opt2.textContent = data.nombre;
-      selectNuevoTema.appendChild(opt2);
-    });
-
+    if (window.db && window.db.collection) {
+      const snapshot = await window.db.collection("Temas").get();
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        if (data && data.nombre) temas.push(data.nombre);
+      });
+    }
   } catch (err) {
     console.error("Error cargando temas para mover:", err);
   }
+
+  // Fallback a banco local si Firebase falla o no devuelve datos
+  if (temas.length === 0) {
+    temas = Object.keys(banco || {});
+  }
+
+  temas.forEach(nombre => {
+    const opt1 = document.createElement("option");
+    opt1.value = nombre;
+    opt1.textContent = nombre;
+    selectTema.appendChild(opt1);
+
+    const opt2 = document.createElement("option");
+    opt2.value = nombre;
+    opt2.textContent = nombre;
+    selectNuevoTema.appendChild(opt2);
+  });
 }
 
 function cargarSubtemasMover() {

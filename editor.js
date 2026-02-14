@@ -522,7 +522,8 @@ function limpiarFormulario() {
 
 function limpiarTemasVacios() {
   Object.keys(banco).forEach(tema => {
-    if (!tema || !Array.isArray(banco[tema]) || banco[tema].length === 0) {
+    // Solo eliminar entradas inválidas, no temas vacíos
+    if (!tema || !Array.isArray(banco[tema])) {
       delete banco[tema];
     }
   });

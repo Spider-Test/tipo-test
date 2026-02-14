@@ -707,7 +707,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-function cargarSubtemasEliminar() {
+async function cargarSubtemasEliminar() {
   const temaSelect = document.getElementById("temaEliminar");
   const subtemaSelect = document.getElementById("subtemaEliminar");
   if (!temaSelect || !subtemaSelect) return;
@@ -715,14 +715,36 @@ function cargarSubtemasEliminar() {
   const tema = temaSelect.value;
   subtemaSelect.innerHTML = "<option value=''>-- seleccionar subtema --</option>";
 
-  if (!tema || !banco[tema]) return;
+  if (!tema) return;
 
-  const subtemas = new Set();
-  banco[tema].forEach(p => {
-    subtemas.add(p.subtema || "General");
-  });
+  let subtemas = [];
 
-  Array.from(subtemas)
+  try {
+    if (window.db && window.getDocs && window.collection) {
+      const snapshot = await window.getDocs(
+        window.collection(window.db, "Subtemas")
+      );
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        if (data && data.temaId === tema && data.nombre) {
+          subtemas.push(data.nombre);
+        }
+      });
+    }
+  } catch (err) {
+    console.error("Error cargando subtemas para eliminar:", err);
+  }
+
+  // Fallback al banco local
+  if (subtemas.length === 0 && banco[tema]) {
+    const set = new Set();
+    banco[tema].forEach(p => {
+      set.add(p.subtema || "General");
+    });
+    subtemas = Array.from(set);
+  }
+
+  subtemas
     .sort((a, b) => {
       if (a.toLowerCase() === "general") return -1;
       if (b.toLowerCase() === "general") return 1;

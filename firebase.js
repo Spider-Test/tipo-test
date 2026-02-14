@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, doc, getDoc, updateDoc, deleteDoc, query, orderBy, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence, GoogleAuthProvider, signInWithRedirect, getRedirectResult } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBQw64gv58J684nbD1QIAqkrIPkbVg_8DU",
@@ -22,6 +22,23 @@ window.deleteDoc = deleteDoc;
 window.addDoc = addDoc;
 const auth = getAuth(app);
 window.auth = auth;
+
+// ===== LOGIN CON REDIRECT DE GOOGLE =====
+const provider = new GoogleAuthProvider();
+window.loginConGoogle = function () {
+  signInWithRedirect(auth, provider);
+};
+
+// Recuperar resultado tras redirect
+getRedirectResult(auth)
+  .then((result) => {
+    if (result && result.user) {
+      console.log("Login con redirect completado:", result.user.email);
+    }
+  })
+  .catch((error) => {
+    console.error("Error en redirect:", error);
+  });
 
 let usuarioActual = null;
 window.usuarioActual = null;

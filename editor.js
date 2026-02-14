@@ -69,6 +69,7 @@ async function initEditor() {
 
       if (bancoFirebase) {
         banco = bancoFirebase;
+        window.banco = banco;
 
         // Asegurar que todos los temas de Firebase existan en el banco local
         if (window.db && window.getDocs && window.collection) {
@@ -92,6 +93,7 @@ async function initEditor() {
   } catch (e) {
     console.log("Sin conexión, usando copia local (editor)");
     banco = cargarBanco();
+    window.banco = banco;
   }
 
   // Inicialización de selectores y vistas

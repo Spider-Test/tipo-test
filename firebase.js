@@ -16,6 +16,8 @@ const db = getFirestore(app);
 window.db = db;
 window.doc = doc;
 window.setDoc = setDoc;
+window.collection = collection;
+window.getDocs = getDocs;
 const auth = getAuth(app);
 
 setPersistence(auth, browserLocalPersistence)

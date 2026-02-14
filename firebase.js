@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, doc, getDoc, updateDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, doc, getDoc, updateDoc, deleteDoc, query, orderBy, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig = {
@@ -158,8 +158,6 @@ export async function crearBackupAutomatico(banco) {
 window.crearBackupAutomatico = crearBackupAutomatico;
 
 // ===== PROGRESO DE TEST SINCRONIZADO =====
-
-import { setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 window.guardarProgresoRemoto = async function (progreso) {
   try {

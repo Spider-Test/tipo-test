@@ -1453,8 +1453,14 @@ async function moverPregunta() {
   // Preparar destino
   if (!banco[temaDestino]) banco[temaDestino] = [];
 
+  // Cambiar subtema localmente
   pregunta.subtema = subtemaDestino;
-  banco[temaDestino].push(pregunta);
+
+  // Insertar solo si no existe ya (evitar duplicados)
+  const yaExiste = banco[temaDestino].some(p => p.id && p.id === pregunta.id);
+  if (!yaExiste) {
+    banco[temaDestino].push(pregunta);
+  }
 
   // Sincronizar en Firebase
   if (pregunta.id && window.actualizarPreguntaFirebase) {
@@ -1470,6 +1476,15 @@ async function moverPregunta() {
 
   guardarBanco();
   if (window.crearBackupAutomatico) window.crearBackupAutomatico(banco);
+
+  // Recargar banco desde Firebase para evitar duplicados
+  if (window.cargarDesdeFirebase) {
+    const bancoFirebase = await window.cargarDesdeFirebase();
+    if (bancoFirebase) {
+      banco = bancoFirebase;
+      guardarBanco();
+    }
+  }
 
   cargarTemasVista();
   cargarTemasExistentes();

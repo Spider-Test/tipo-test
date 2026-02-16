@@ -1121,8 +1121,11 @@ function corregirTest() {
         correcta: p.opciones[p.correcta],
         feedback: p.feedback || ""
       });
-      return; // ← CLAVE: no se evalúa como fallada ni acertada
-      // Confirmado: el return impide que se pinte fondo rojo, se llame a actualizarPreguntaFallada o se agregue a preguntasFalladas.
+
+      // Contar también como fallada a nivel de estadísticas
+      actualizarPreguntaFallada(p, false);
+
+      return;
     }
 
     const respuestaUsuario = marcada ? parseInt(marcada.value) : null;

@@ -206,9 +206,15 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
 
       console.log("Marcadas cargadas:", idsMarcadas.size);
-      // Repintar temas para actualizar contador de marcadas
+
+      // Guardar banco actualizado con marcadas
+      try {
+        guardarBancoLocal();
+      } catch (e) {}
+
+      // Repintar temas tras asegurar que el banco está actualizado
       if (typeof pintarCheckboxesTemas === "function") {
-        pintarCheckboxesTemas();
+        setTimeout(() => pintarCheckboxesTemas(), 0);
       }
     }
   } catch (e) {
@@ -512,8 +518,24 @@ function pintarCheckboxesTemas() {
 
     bloqueTema.appendChild(label);
 
-    // === Subtemas colapsables (solo para temas reales) ===
-    if (tema !== "__falladas__" && tema !== "__marcadas__") {
+    // === Subtemas colapsables ===
+    if (tema === "__marcadas__") {
+      // Crear subtemas por cada tema que tenga preguntas marcadas
+      let subtemasMarcados = [];
+
+      Object.keys(banco).forEach(t => {
+        if (!Array.isArray(banco[t])) return;
+        const tieneMarcadas = banco[t].some(p => p.marcada);
+        if (tieneMarcadas) {
+          subtemasMarcados.push(t);
+        }
+      });
+
+      if (subtemasMarcados.length > 0) {
+        pintarSubtemas("__marcadas__", subtemasMarcados, bloqueTema, checkbox);
+      }
+
+    } else if (tema !== "__falladas__") {
       let subtemas = [];
 
       try {

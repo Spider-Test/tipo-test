@@ -159,6 +159,7 @@ async function initEditor() {
 /* ====== CREAR / EDITAR PREGUNTA ====== */
 function guardarPregunta() {
   const tema = document.getElementById("tema").value.trim();
+  const temaSeleccionado = tema;
   const subtemaInput = document.getElementById("subtemaPregunta")?.value.trim();
   const subtemaSelect = document.getElementById("subtemaExistente");
   let subtema = "General";
@@ -260,6 +261,22 @@ function guardarPregunta() {
   cargarTemasVista();
   cargarTemasExistentes();
   cargarSelectEliminar();
+
+  // Restaurar tema seleccionado tras guardar
+  const inputTema = document.getElementById("tema");
+  const selectTema = document.getElementById("temaExistente");
+  if (inputTema && temaSeleccionado) {
+    inputTema.value = temaSeleccionado;
+    inputTema.disabled = true;
+  }
+  if (selectTema && temaSeleccionado) {
+    selectTema.value = temaSeleccionado;
+
+    // Recargar subtemas del tema restaurado
+    if (typeof cargarSubtemasPorTema === "function") {
+      cargarSubtemasPorTema();
+    }
+  }
 }
 
 /* ====== VISTA AVANZADA ====== */

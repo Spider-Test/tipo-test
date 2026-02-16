@@ -520,16 +520,21 @@ function pintarCheckboxesTemas() {
 
     // === Subtemas colapsables ===
     if (tema === "__marcadas__") {
-      // Crear subtemas por cada tema que tenga preguntas marcadas
+      // Subtemas = temas reales que tengan preguntas marcadas
       let subtemasMarcados = [];
 
       Object.keys(banco).forEach(t => {
+        if (t === "__falladas__" || t === "__marcadas__") return;
         if (!Array.isArray(banco[t])) return;
+
         const tieneMarcadas = banco[t].some(p => p.marcada);
         if (tieneMarcadas) {
           subtemasMarcados.push(t);
         }
       });
+
+      // Orden natural
+      subtemasMarcados.sort(ordenNatural);
 
       if (subtemasMarcados.length > 0) {
         pintarSubtemas("__marcadas__", subtemasMarcados, bloqueTema, checkbox);

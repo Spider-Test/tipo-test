@@ -531,7 +531,10 @@ function limpiarFormulario() {
   document.getElementById("feedback").value = "";
 
   const subtemaInput = document.getElementById("subtemaPregunta");
+  const subtemaSelect = document.getElementById("subtemaExistente");
+
   if (subtemaInput) subtemaInput.value = "";
+  if (subtemaSelect) subtemaSelect.disabled = false;
 
   document.querySelectorAll(".opcion textarea").forEach(o => {
     o.value = "";

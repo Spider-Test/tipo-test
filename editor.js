@@ -264,12 +264,14 @@ function guardarPregunta() {
   cargarTemasExistentes();
   cargarSelectEliminar();
 
-  // Restaurar tema seleccionado tras guardar
-  const selectTema = document.getElementById("temaExistente");
-  if (selectTema && temaSeleccionado) {
-    selectTema.value = temaSeleccionado;
-    selectTema.dispatchEvent(new Event("change"));
-  }
+  // Restaurar tema seleccionado tras guardar (tras reconstrucción de selectores)
+  setTimeout(() => {
+    const selectTema = document.getElementById("temaExistente");
+    if (selectTema && temaSeleccionado) {
+      selectTema.value = temaSeleccionado;
+      selectTema.dispatchEvent(new Event("change"));
+    }
+  }, 200);
 }
 
 /* ====== VISTA AVANZADA ====== */

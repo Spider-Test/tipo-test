@@ -158,8 +158,10 @@ async function initEditor() {
 
 /* ====== CREAR / EDITAR PREGUNTA ====== */
 function guardarPregunta() {
-  const tema = document.getElementById("tema").value.trim();
-  const temaSeleccionado = tema;
+  const temaInput = document.getElementById("tema");
+  const temaSelect = document.getElementById("temaExistente");
+  const tema = temaInput.value.trim();
+  const temaSeleccionado = temaSelect && temaSelect.value ? temaSelect.value : tema;
   const subtemaInput = document.getElementById("subtemaPregunta")?.value.trim();
   const subtemaSelect = document.getElementById("subtemaExistente");
   let subtema = "General";
@@ -265,22 +267,17 @@ function guardarPregunta() {
   // Restaurar tema seleccionado tras guardar
   const inputTema = document.getElementById("tema");
   const selectTema = document.getElementById("temaExistente");
-  if (inputTema && temaSeleccionado) {
-    inputTema.value = temaSeleccionado;
-    inputTema.disabled = true;
-  }
+
   if (selectTema && temaSeleccionado) {
     selectTema.value = temaSeleccionado;
 
-    // Sincronizar input y select de tema
-    if (typeof controlarInputTema === "function") {
-      controlarInputTema();
-    }
+    // Disparar comportamiento normal del selector
+    selectTema.dispatchEvent(new Event("change"));
+  }
 
-    // Recargar subtemas del tema restaurado
-    if (typeof cargarSubtemasPorTema === "function") {
-      cargarSubtemasPorTema();
-    }
+  if (inputTema && temaSeleccionado) {
+    inputTema.value = temaSeleccionado;
+    inputTema.disabled = true;
   }
 }
 

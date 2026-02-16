@@ -265,19 +265,10 @@ function guardarPregunta() {
   cargarSelectEliminar();
 
   // Restaurar tema seleccionado tras guardar
-  const inputTema = document.getElementById("tema");
   const selectTema = document.getElementById("temaExistente");
-
   if (selectTema && temaSeleccionado) {
     selectTema.value = temaSeleccionado;
-
-    // Disparar comportamiento normal del selector
     selectTema.dispatchEvent(new Event("change"));
-  }
-
-  if (inputTema && temaSeleccionado) {
-    inputTema.value = temaSeleccionado;
-    inputTema.disabled = true;
   }
 }
 

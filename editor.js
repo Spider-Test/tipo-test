@@ -109,6 +109,27 @@ async function initEditor() {
   document.getElementById("temaExistente")?.addEventListener("change", controlarInputTema);
   document.getElementById("temaExistente")?.addEventListener("change", cargarSubtemasPorTema);
 
+  // Controlar conflicto entre subtema nuevo y subtema existente
+  const subtemaInput = document.getElementById("subtemaPregunta");
+  const subtemaSelect = document.getElementById("subtemaExistente");
+
+  if (subtemaInput && subtemaSelect) {
+    subtemaInput.addEventListener("input", () => {
+      if (subtemaInput.value.trim()) {
+        subtemaSelect.value = "";
+        subtemaSelect.disabled = true;
+      } else {
+        subtemaSelect.disabled = false;
+      }
+    });
+
+    subtemaSelect.addEventListener("change", () => {
+      if (subtemaSelect.value) {
+        subtemaInput.value = "";
+      }
+    });
+  }
+
   // 2. Sincronizar con Firebase en segundo plano
   try {
     if (window.cargarDesdeFirebase) {
@@ -508,6 +529,10 @@ function actualizarOpciones() {
 function limpiarFormulario() {
   document.getElementById("pregunta").value = "";
   document.getElementById("feedback").value = "";
+
+  const subtemaInput = document.getElementById("subtemaPregunta");
+  if (subtemaInput) subtemaInput.value = "";
+
   document.querySelectorAll(".opcion textarea").forEach(o => {
     o.value = "";
     o.style.height = "auto";

@@ -206,6 +206,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
 
       console.log("Marcadas cargadas:", idsMarcadas.size);
+      // Repintar temas para actualizar contador de marcadas
+      if (typeof pintarCheckboxesTemas === "function") {
+        pintarCheckboxesTemas();
+      }
     }
   } catch (e) {
     console.warn("No se pudieron cargar las preguntas marcadas:", e);

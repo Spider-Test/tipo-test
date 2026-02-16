@@ -1526,6 +1526,12 @@ async function moverPregunta() {
   cargarSelectEliminar();
   cargarSelectRenombrar();
 
+  // Refrescar selectores de mover pregunta sin recargar la página
+  cargarTemasMover();
+  cargarSubtemasMover();
+  cargarPreguntasMover();
+  cargarSubtemasDestinoMover();
+
   alert("Pregunta movida correctamente");
 }
 

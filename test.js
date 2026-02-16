@@ -518,6 +518,27 @@ function pintarCheckboxesTemas() {
 
     bloqueTema.appendChild(label);
 
+    // Subtemas para preguntas falladas (por tema real)
+    if (tema === "__falladas__") {
+      let subtemasFallados = [];
+
+      Object.keys(banco).forEach(t => {
+        if (t === "__falladas__" || t === "__marcadas__") return;
+        if (!Array.isArray(banco[t])) return;
+
+        const tieneFalladas = banco[t].some(p => (p.fallada || 0) > 0);
+        if (tieneFalladas) {
+          subtemasFallados.push(t);
+        }
+      });
+
+      subtemasFallados.sort(ordenNatural);
+
+      if (subtemasFallados.length > 0) {
+        pintarSubtemas("__falladas__", subtemasFallados, bloqueTema, checkbox);
+      }
+    }
+
     // === Subtemas colapsables ===
     if (tema === "__marcadas__") {
       // Subtemas = temas reales que tengan preguntas marcadas

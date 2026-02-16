@@ -627,7 +627,16 @@ function pintarSubtemas(tema, subtemas, bloqueTema, checkbox) {
     });
 
     subLabel.appendChild(subCb);
-    subLabel.appendChild(document.createTextNode(" " + sub));
+
+    let textoSub = " " + sub;
+
+    // Contador para subtemas de preguntas marcadas
+    if (tema === "__marcadas__") {
+      const count = (banco[sub] || []).filter(p => p.marcada).length;
+      textoSub = ` ${sub} (${count})`;
+    }
+
+    subLabel.appendChild(document.createTextNode(textoSub));
     contSub.appendChild(subLabel);
   });
 

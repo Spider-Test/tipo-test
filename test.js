@@ -1341,7 +1341,36 @@ function mostrarResumen() {
     // Marcadas para revisar
     const marcada = preguntasMarcadas.find(m => m.pregunta === p.pregunta);
     if (marcada) {
-      seccionMarcadas.appendChild(div.cloneNode(true));
+      const bloqueMarcado = div.cloneNode(true);
+
+      const btnDesmarcar = document.createElement("button");
+      btnDesmarcar.textContent = "Quitar marca";
+      btnDesmarcar.style.marginTop = "6px";
+      btnDesmarcar.style.fontSize = "12px";
+      btnDesmarcar.style.cursor = "pointer";
+
+      btnDesmarcar.onclick = async () => {
+        if (!p.id) return;
+
+        // Actualizar estado local
+        p.marcada = false;
+
+        // Quitar en Firebase
+        if (typeof desmarcarPreguntaRemoto === "function") {
+          await desmarcarPreguntaRemoto(p.id);
+        }
+
+        // Eliminar visualmente del resumen
+        bloqueMarcado.remove();
+
+        // Refrescar contadores de temas si existe la función
+        if (typeof pintarCheckboxesTemas === "function") {
+          pintarCheckboxesTemas();
+        }
+      };
+
+      bloqueMarcado.appendChild(btnDesmarcar);
+      seccionMarcadas.appendChild(bloqueMarcado);
     }
   });
 

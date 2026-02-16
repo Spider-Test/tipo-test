@@ -1533,6 +1533,11 @@ function resetearEstadisticas() {
   if (banco["__falladas__"]) {
     banco["__falladas__"].forEach(p => {
       p.fallada = 0;
+
+      // Sincronizar con Firebase
+      if (p.id && window.actualizarFallada) {
+        window.actualizarFallada(p.id, 0);
+      }
     });
   }
 

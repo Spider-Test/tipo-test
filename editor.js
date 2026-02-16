@@ -162,15 +162,19 @@ function guardarPregunta() {
   const temaSelect = document.getElementById("temaExistente");
   const tema = temaInput.value.trim();
   const temaSeleccionado = temaSelect && temaSelect.value ? temaSelect.value : tema;
-  const subtemaInput = document.getElementById("subtemaPregunta")?.value.trim();
-  const subtemaSelect = document.getElementById("subtemaExistente");
+
+  const subtemaInputEl = document.getElementById("subtemaPregunta");
+  const subtemaSelectEl = document.getElementById("subtemaExistente");
+  const subtemaInput = subtemaInputEl?.value.trim();
   let subtema = "General";
 
   if (subtemaInput) {
     subtema = subtemaInput;
-  } else if (subtemaSelect && subtemaSelect.value) {
-    subtema = subtemaSelect.value;
+  } else if (subtemaSelectEl && subtemaSelectEl.value) {
+    subtema = subtemaSelectEl.value;
   }
+
+  const subtemaSeleccionado = subtema;
   if (!tema) {
     alert("El tema no puede estar vacío");
     return;
@@ -264,13 +268,23 @@ function guardarPregunta() {
   cargarTemasExistentes();
   cargarSelectEliminar();
 
-  // Restaurar tema seleccionado tras guardar (tras reconstrucción de selectores)
+  // Restaurar tema y subtema seleccionados tras guardar
   setTimeout(() => {
     const selectTema = document.getElementById("temaExistente");
+    const selectSubtema = document.getElementById("subtemaExistente");
+
     if (selectTema && temaSeleccionado) {
       selectTema.value = temaSeleccionado;
       selectTema.dispatchEvent(new Event("change"));
     }
+
+    // Restaurar subtema tras cargarse los subtemas del tema
+    setTimeout(() => {
+      if (selectSubtema && subtemaSeleccionado) {
+        selectSubtema.value = subtemaSeleccionado;
+      }
+    }, 150);
+
   }, 200);
 }
 

@@ -272,6 +272,11 @@ function guardarPregunta() {
   if (selectTema && temaSeleccionado) {
     selectTema.value = temaSeleccionado;
 
+    // Sincronizar input y select de tema
+    if (typeof controlarInputTema === "function") {
+      controlarInputTema();
+    }
+
     // Recargar subtemas del tema restaurado
     if (typeof cargarSubtemasPorTema === "function") {
       cargarSubtemasPorTema();

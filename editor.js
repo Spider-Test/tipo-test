@@ -271,19 +271,19 @@ function guardarPregunta() {
   // Restaurar tema y subtema seleccionados tras guardar
   setTimeout(() => {
     const selectTema = document.getElementById("temaExistente");
-    const selectSubtema = document.getElementById("subtemaExistente");
 
     if (selectTema && temaSeleccionado) {
       selectTema.value = temaSeleccionado;
       selectTema.dispatchEvent(new Event("change"));
     }
 
-    // Restaurar subtema tras cargarse los subtemas del tema
+    // Restaurar subtema tras cargarse completamente los subtemas
     setTimeout(() => {
+      const selectSubtema = document.getElementById("subtemaExistente");
       if (selectSubtema && subtemaSeleccionado) {
         selectSubtema.value = subtemaSeleccionado;
       }
-    }, 150);
+    }, 400);
 
   }, 200);
 }

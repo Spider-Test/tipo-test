@@ -508,8 +508,8 @@ function pintarCheckboxesTemas() {
 
     bloqueTema.appendChild(label);
 
-    // === Subtemas colapsables (desde colección Subtemas) ===
-    if (tema !== "__falladas__") {
+    // === Subtemas colapsables (solo para temas reales) ===
+    if (tema !== "__falladas__" && tema !== "__marcadas__") {
       let subtemas = [];
 
       try {

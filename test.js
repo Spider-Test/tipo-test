@@ -459,6 +459,8 @@ function pintarCheckboxesTemas() {
   if (banco["__falladas__"]) {
     temasOrdenados.push("__falladas__");
   }
+  // Añadir tema especial de preguntas marcadas
+  temasOrdenados.push("__marcadas__");
 
   temasOrdenados.forEach(tema => {
     let nombreVisible = tema;
@@ -468,6 +470,12 @@ function pintarCheckboxesTemas() {
     if (tema === "__falladas__") {
       nombreVisible = "📌 Preguntas más falladas";
       contador = banco["__falladas__"].filter(p => (p.fallada || 0) > 0).length;
+    } else if (tema === "__marcadas__") {
+      nombreVisible = "⭐ Preguntas marcadas";
+      contador = Object.values(banco)
+        .filter(arr => Array.isArray(arr))
+        .flat()
+        .filter(p => p.marcada).length;
     } else {
       contador = banco[tema].length;
       nuevas = banco[tema].filter(p => (p.fallada || 0) === 0).length;
@@ -743,6 +751,46 @@ function iniciarTestReal() {
     temas: temasSeleccionados.slice(),
     num: parseInt(document.getElementById("numPreguntas").value) || null
   };
+
+  // === MODO PREGUNTAS MARCADAS ===
+  if (temasSeleccionados.some(t => t.tema === "__marcadas__")) {
+    let marcadas = [];
+
+    Object.keys(banco).forEach(tema => {
+      if (!Array.isArray(banco[tema])) return;
+      banco[tema].forEach(p => {
+        if (p.marcada) marcadas.push(p);
+      });
+    });
+
+    if (marcadas.length === 0) {
+      alert("No tienes preguntas marcadas todavía");
+      mostrarPantallaInicial();
+      return;
+    }
+
+    let num = parseInt(document.getElementById("numPreguntas").value);
+    if (isNaN(num) || num <= 0) {
+      num = marcadas.length;
+    }
+
+    preguntasTest = marcadas
+      .sort(() => Math.random() - 0.5)
+      .slice(0, num);
+
+    zonaTest.innerHTML = "";
+    zonaTest.style.display = "block";
+    preguntasTest.forEach((p, i) => {
+      zonaTest.appendChild(crearBloquePregunta(p, i));
+    });
+
+    if (corregirBtn) {
+      corregirBtn.style.display = "block";
+    }
+
+    iniciarCronometro();
+    return;
+  }
 
   if (temasSeleccionados.includes("__falladas__")) {
     asegurarTemaFalladas();

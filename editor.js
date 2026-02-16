@@ -1417,27 +1417,47 @@ function cargarPreguntasMover() {
   });
 }
 
-function cargarSubtemasDestinoMover() {
+async function cargarSubtemasDestinoMover() {
   const tema = document.getElementById("nuevoTemaMover")?.value;
   const selectSubtema = document.getElementById("nuevoSubtemaMover");
   if (!selectSubtema) return;
 
   selectSubtema.innerHTML = "<option value=''>Selecciona subtema destino</option>";
 
-  if (!tema || !banco[tema]) return;
+  if (!tema) return;
 
-  const subtemas = new Set();
-  banco[tema].forEach(p => {
-    subtemas.add(p.subtema || "General");
-  });
+  let subtemas = [];
 
-  // Asegurar que "General" siempre esté primero y sin duplicados
-  const listaSubtemas = Array.from(subtemas);
-  if (!listaSubtemas.includes("General")) {
-    listaSubtemas.unshift("General");
+  try {
+    if (window.db && window.getDocs && window.collection) {
+      const snapshot = await window.getDocs(
+        window.collection(window.db, "Subtemas")
+      );
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        if (data && data.temaId === tema && data.nombre) {
+          subtemas.push(data.nombre);
+        }
+      });
+    }
+  } catch (err) {
+    console.warn("Error cargando subtemas desde Firebase, usando local");
   }
 
-  listaSubtemas
+  // Mezclar subtemas de banco local
+  if (banco[tema]) {
+    const set = new Set(subtemas);
+    banco[tema].forEach(p => {
+      set.add(p.subtema || "General");
+    });
+    subtemas = Array.from(set);
+  }
+
+  if (!subtemas.includes("General")) {
+    subtemas.unshift("General");
+  }
+
+  subtemas
     .sort((a, b) => a.localeCompare(b, "es", { sensitivity: "base" }))
     .forEach(st => {
       const opt = document.createElement("option");

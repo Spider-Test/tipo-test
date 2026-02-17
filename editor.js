@@ -160,8 +160,9 @@ async function initEditor() {
 function guardarPregunta() {
   const temaInput = document.getElementById("tema");
   const temaSelect = document.getElementById("temaExistente");
-  const tema = temaInput.value.trim();
-  const temaSeleccionado = temaSelect && temaSelect.value ? temaSelect.value : tema;
+  const temaInputValor = temaInput.value.trim();
+  const temaSelectValor = temaSelect && temaSelect.value ? temaSelect.value : "";
+  const temaSeleccionado = temaSelectValor || temaInputValor;
 
   const subtemaInputEl = document.getElementById("subtemaPregunta");
   const subtemaSelectEl = document.getElementById("subtemaExistente");
@@ -175,7 +176,7 @@ function guardarPregunta() {
   }
 
   const subtemaSeleccionado = subtema;
-  if (!tema) {
+  if (!temaSeleccionado) {
     alert("El tema no puede estar vacío");
     return;
   }
@@ -188,7 +189,7 @@ function guardarPregunta() {
 
   const marcada = document.querySelector('input[name="correcta"]:checked');
 
-  if (!tema || !pregunta || opciones.some(o => o === "") || !marcada) {
+  if (!temaSeleccionado || !pregunta || opciones.some(o => o === "") || !marcada) {
     alert("Rellena todos los campos y marca la respuesta correcta");
     return;
   }
@@ -233,8 +234,8 @@ function guardarPregunta() {
 
     editando = null;
   } else {
-    if (!banco[tema]) banco[tema] = [];
-    banco[tema].push({
+    if (!banco[temaSeleccionado]) banco[temaSeleccionado] = [];
+    banco[temaSeleccionado].push({
       pregunta,
       opciones,
       correcta,
@@ -245,7 +246,7 @@ function guardarPregunta() {
     // Crear en Firebase solo si es pregunta nueva
     if (window.guardarEnFirebase) {
       window.guardarEnFirebase({
-        tema,
+        tema: temaSeleccionado,
         subtema,
         pregunta,
         opciones,
@@ -854,6 +855,7 @@ window.borrarSubtemaDesdeGestion = borrarSubtema;
 function prepararValidacionFormulario() {
   const campos = [
     document.getElementById("tema"),
+    document.getElementById("temaExistente"),
     document.getElementById("pregunta"),
     document.getElementById("feedback")
   ];
@@ -875,13 +877,20 @@ function prepararValidacionFormulario() {
       validarFormulario();
     }
   });
+
+  const temaExistente = document.getElementById("temaExistente");
+  if (temaExistente) {
+    temaExistente.addEventListener("change", validarFormulario);
+  }
 }
 
 function validarFormulario() {
   const boton = document.querySelector("button[onclick='guardarPregunta()']");
   if (!boton) return;
 
-  const tema = document.getElementById("tema")?.value.trim();
+  const temaInput = document.getElementById("tema")?.value.trim();
+  const temaSelect = document.getElementById("temaExistente")?.value;
+  const tema = temaSelect || temaInput;
   const pregunta = document.getElementById("pregunta")?.value.trim();
   const opciones = Array.from(
     document.querySelectorAll(".opcion textarea")

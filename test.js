@@ -2358,7 +2358,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
         localStorage.setItem(STORAGE_KEY, JSON.stringify(bancoLocal));
         alert("Todas las preguntas vistas se han reseteado.");
-        location.reload();
+        // Refrescar contadores y selectores sin recargar la página
+        banco = bancoLocal;
+        if (typeof pintarCheckboxesTemas === "function") {
+          pintarCheckboxesTemas();
+        }
       } catch (e) {
         console.error("Error al resetear preguntas vistas", e);
         alert("No se pudieron resetear las preguntas vistas.");
@@ -2395,7 +2399,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
         localStorage.setItem(STORAGE_KEY, JSON.stringify(bancoLocal));
         alert(`Las preguntas vistas del tema "${tema}" se han reseteado.`);
-        location.reload();
+        // Refrescar contadores y selectores sin recargar la página
+        banco = bancoLocal;
+        if (typeof pintarCheckboxesTemas === "function") {
+          pintarCheckboxesTemas();
+        }
       } catch (e) {
         console.error("Error al resetear preguntas vistas por tema", e);
         alert("No se pudieron resetear las preguntas vistas del tema.");

@@ -530,6 +530,9 @@ button[onclick*="blanco"] {
       <span class="slider"></span>
     </label>
   </div>
+  <p style="font-size:13px; color:var(--accent-muted); margin:6px 0 8px 0; text-align:left;">
+    Compatible con: Preguntas nuevas y Repaso inteligente.
+  </p>
 
   <div id="simulacroConfig" style="display:none; margin-top:10px;">
     <label for="tiempoSimulacro">Tiempo del examen (minutos)</label>
@@ -565,7 +568,7 @@ button[onclick*="blanco"] {
 
   <!-- Modo repaso simple -->
   <div style="display:flex; align-items:center; justify-content:space-between;">
-    <span style="font-weight:600;">Modo nuevas</span>
+    <span style="font-weight:600;">Preguntas nuevas</span>
     <label class="ios-switch">
       <input type="checkbox" id="modoRepasoSimple">
       <span class="slider"></span>
@@ -602,25 +605,6 @@ button[onclick*="blanco"] {
   <hr style="margin:14px 0; border:none; border-top:1px solid var(--border-main);">
 
   <div style="margin-top:10px; text-align:center;">
-    <label style="display:flex; align-items:center; justify-content:space-between; font-weight:600;">
-      <span>Solo preguntas nuevas</span>
-      <label class="ios-switch">
-        <input type="checkbox" id="soloNuevasToggle">
-        <span class="slider"></span>
-      </label>
-    </label>
-    <p style="
-      font-size:12px;
-      color: var(--accent-muted);
-      margin-top:6px;
-      line-height:1.4;
-      text-align:left;
-    ">
-      Genera un test solo con preguntas que no hayas fallado todavía dentro de los temas seleccionados.
-    </p>
-
-    <hr style="margin:14px 0; border:none; border-top:1px solid var(--border-main);">
-
     <label style="margin-top:0; font-weight:600;">Nº de preguntas</label>
     <input type="number" id="numPreguntas" min="1" style="margin:6px auto 10px; display:block;">
 
@@ -662,21 +646,37 @@ button[onclick*="blanco"] {
       Restablecer todas las estadísticas
     </button>
 
-    <button onclick="restablecerTema()" style="font-size:13px; padding:6px 12px; width:100%;">
+    <button onclick="restablecerTema()" style="font-size:13px; padding:6px 12px; width:100%; margin-top:6px;">
       Restablecer estadísticas del tema
     </button>
-
     <select id="selectorTemaReset" style="
       width:100%;
       padding:6px 8px;
       border-radius:8px;
-      margin-top:8px;
+      margin-top:6px;
       border:1px solid var(--border-main);
       background:var(--bg-card);
       color:var(--text-main);
-    ">
-      <option value="">Selecciona un tema</option>
-    </select>
+    "></select>
+
+    <hr style="margin:10px 0;">
+
+    <button id="btnResetVistas" style="font-size:13px; padding:6px 12px; width:100%; margin-bottom:6px;">
+      Resetear todas las preguntas vistas
+    </button>
+
+    <button id="btnResetVistasTema" style="font-size:13px; padding:6px 12px; width:100%; margin-top:6px;">
+      Resetear preguntas vistas del tema
+    </button>
+    <select id="selectorTemaResetVistas" style="
+      width:100%;
+      padding:6px 8px;
+      border-radius:8px;
+      margin-top:6px;
+      border:1px solid var(--border-main);
+      background:var(--bg-card);
+      color:var(--text-main);
+    "></select>
 
   </div>
 </div>
@@ -849,7 +849,6 @@ button[onclick*="blanco"] {
 
   actualizarEstadoBotonGenerar();
 </script>
-</script>
 <script>
   function toggleResetStats() {
     const bloque = document.getElementById("bloqueResetStats");
@@ -860,5 +859,6 @@ button[onclick*="blanco"] {
 <!-- Lógica del test gestionada íntegramente en test.js -->
 <script type="module" src="firebase.js"></script>
 <script src="test.js"></script>
+
 </body>
 </html>

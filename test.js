@@ -360,15 +360,38 @@ function initTest() {
   const repasoInt = document.getElementById("modoRepasoInteligente");
   const repasoSimple = document.getElementById("modoRepasoSimple");
   const repasoGeneral = document.getElementById("modoRepasoGeneral");
-  const soloNuevas = document.getElementById("soloNuevasToggle");
 
   function desactivarOtrosModos(activo) {
-    const modos = [toggleSim, repasoInt, repasoSimple, repasoGeneral, soloNuevas];
-    modos.forEach(m => {
-      if (m && m !== activo) {
-        m.checked = false;
-      }
-    });
+    // Reglas de compatibilidad:
+    // Simulacro: compatible con nuevas e inteligente, incompatible con repaso
+    // Repaso: incompatible con todos
+    // Nuevas: solo compatible con simulacro
+    // Inteligente: solo compatible con simulacro
+
+    if (activo === toggleSim) {
+      // Simulacro: solo desactiva repaso general
+      if (repasoGeneral) repasoGeneral.checked = false;
+    }
+
+    if (activo === repasoGeneral) {
+      // Repaso general: desactiva todo lo demás
+      if (toggleSim) toggleSim.checked = false;
+      if (repasoInt) repasoInt.checked = false;
+      if (repasoSimple) repasoSimple.checked = false;
+    }
+
+    if (activo === repasoSimple) {
+      // Preguntas nuevas: solo compatible con simulacro
+      if (repasoGeneral) repasoGeneral.checked = false;
+      if (repasoInt) repasoInt.checked = false;
+    }
+
+    if (activo === repasoInt) {
+      // Repaso inteligente: solo compatible con simulacro
+      // No activar simulacro automáticamente; solo bloquear incompatibles
+      if (repasoGeneral) repasoGeneral.checked = false;
+      if (repasoSimple) repasoSimple.checked = false;
+    }
 
     // Ajustes visuales específicos
     if (configSim) {
@@ -421,14 +444,6 @@ function initTest() {
     });
   }
 
-  if (soloNuevas) {
-    soloNuevas.addEventListener("change", () => {
-      if (soloNuevas.checked) {
-        desactivarOtrosModos(soloNuevas);
-      }
-    });
-  }
-
   // 🔄 Botón: resetear preguntas más falladas
   const btnResetFalladas = document.getElementById("resetFallosBtn");
   if (btnResetFalladas) {
@@ -452,6 +467,24 @@ function initTest() {
       opt.value = tema;
       opt.textContent = `${tema} (${preguntas.length})`;
       resetTemaSelect.appendChild(opt);
+    });
+  }
+
+  // 🔄 Reset de vistas por tema: rellenar selector
+  const resetVistasSelect = document.getElementById("selectorTemaResetVistas");
+  if (resetVistasSelect) {
+    resetVistasSelect.innerHTML = '<option value="">Selecciona un tema</option>';
+
+    Object.keys(banco).forEach(tema => {
+      if (tema === "__falladas__" || tema === "__marcadas__") return;
+
+      const preguntas = banco[tema];
+      if (!Array.isArray(preguntas)) return;
+
+      const opt = document.createElement("option");
+      opt.value = tema;
+      opt.textContent = `${tema} (${preguntas.length})`;
+      resetVistasSelect.appendChild(opt);
     });
   }
 
@@ -529,7 +562,7 @@ function pintarCheckboxesTemas() {
         .filter(p => p.marcada).length;
     } else {
       contador = banco[tema].length;
-      nuevas = banco[tema].filter(p => (p.fallada || 0) === 0).length;
+      nuevas = banco[tema].filter(p => !p.vista).length;
     }
 
     const bloqueTema = document.createElement("div");
@@ -554,7 +587,11 @@ function pintarCheckboxesTemas() {
 
     label.appendChild(checkbox);
 
-    const texto = ` ${nombreVisible} (${contador})`;
+    let texto = ` ${nombreVisible} (${contador})`;
+
+    if (tema !== "__falladas__" && tema !== "__marcadas__") {
+      texto = ` ${nombreVisible} (${contador}) · ${nuevas} nuevas`;
+    }
     label.appendChild(document.createTextNode(texto));
 
     bloqueTema.appendChild(label);
@@ -696,6 +733,13 @@ function pintarSubtemas(tema, subtemas, bloqueTema, checkbox) {
     if (tema === "__marcadas__") {
       const count = (banco[sub] || []).filter(p => p.marcada).length;
       textoSub = ` ${sub} (${count})`;
+    }
+    // Contador normal por subtema (total y nuevas)
+    else if (Array.isArray(banco[tema])) {
+      const preguntasSub = banco[tema].filter(p => (p.subtema || "General") === sub);
+      const total = preguntasSub.length;
+      const nuevas = preguntasSub.filter(p => !p.vista).length;
+      textoSub = ` ${sub} (${total}) · ${nuevas} nuevas`;
     }
 
     subLabel.appendChild(document.createTextNode(textoSub));
@@ -967,7 +1011,7 @@ function iniciarTestReal() {
 
   // Si el modo repaso simple está activo, forzar desactivación de los otros modos
   let repasoActivo = document.getElementById("modoRepasoInteligente")?.checked;
-  let soloNuevasActivo = document.getElementById("soloNuevasToggle")?.checked;
+  let soloNuevasActivo = false;
 
   if (repasoSimpleActivo || repasoGeneralActivo) {
     repasoActivo = false;
@@ -1015,9 +1059,9 @@ function iniciarTestReal() {
     return;
   }
 
-  // Filtro: solo preguntas nuevas (sin fallos)
+  // Filtro: solo preguntas nuevas (nunca vistas)
   if (soloNuevasActivo) {
-    poolPreguntas = poolPreguntas.filter(p => (p.fallada || 0) === 0);
+    poolPreguntas = poolPreguntas.filter(p => !p.vista);
 
     // Si no quedan preguntas tras el filtro, volver a la pantalla inicial
     if (poolPreguntas.length === 0) {
@@ -1158,6 +1202,17 @@ function iniciarTestReal() {
     alert("No hay preguntas que coincidan con esa configuración.");
     mostrarPantallaInicial();
     return;
+  }
+  // Marcar preguntas como vistas
+  preguntasTest.forEach(p => {
+    p.vista = true;
+  });
+
+  // Guardar banco actualizado
+  try {
+    guardarBancoLocal();
+  } catch (e) {
+    console.warn("No se pudieron guardar las preguntas vistas", e);
   }
 
   preguntasTest.forEach((p, i) => {
@@ -2014,7 +2069,7 @@ function actualizarEstadoBotonEmpezar() {
 
   // Comprobar si hay algún modo activo (robusto: cualquier modo)
   const cualquierModo = document.querySelector(
-    '#simulacroToggle:checked, #modoRepasoInteligente:checked, #modoRepasoSimple:checked, #modoRepasoGeneral:checked, #soloNuevasToggle:checked'
+    '#simulacroToggle:checked, #modoRepasoInteligente:checked, #modoRepasoSimple:checked, #modoRepasoGeneral:checked'
   );
 
   const hayModoActivo = !!cualquierModo;
@@ -2258,6 +2313,96 @@ function actualizarPanelLateral() {
     ${renderBloque("En blanco", enBlanco, "panelBlanco")}
   `;
 }
+
+// ===== RESET DE PREGUNTAS VISTAS =====
+document.addEventListener("DOMContentLoaded", () => {
+  const btnResetVistas = document.getElementById("btnResetVistas");
+  const btnResetVistasTema = document.getElementById("btnResetVistasTema");
+  const selectorTemaResetVistas = document.getElementById("selectorTemaResetVistas");
+
+  // Rellenar selector de temas para reset de vistas
+  if (selectorTemaResetVistas) {
+    selectorTemaResetVistas.innerHTML = '<option value="">Selecciona un tema</option>';
+
+    Object.keys(banco || {}).forEach(tema => {
+      if (tema === "__falladas__" || tema === "__marcadas__") return;
+      if (!Array.isArray(banco[tema])) return;
+
+      const opt = document.createElement("option");
+      opt.value = tema;
+      opt.textContent = tema;
+      selectorTemaResetVistas.appendChild(opt);
+    });
+  }
+
+  // Reset global de vistas
+  if (btnResetVistas) {
+    btnResetVistas.addEventListener("click", () => {
+      if (!confirm("¿Seguro que quieres resetear TODAS las preguntas vistas?")) return;
+
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+
+        const bancoLocal = JSON.parse(raw);
+
+        Object.keys(bancoLocal).forEach(tema => {
+          if (tema === "__falladas__" || tema === "__marcadas__") return;
+
+          const contenido = bancoLocal[tema];
+
+          if (Array.isArray(contenido)) {
+            contenido.forEach(p => delete p.vista);
+          }
+        });
+
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(bancoLocal));
+        alert("Todas las preguntas vistas se han reseteado.");
+        location.reload();
+      } catch (e) {
+        console.error("Error al resetear preguntas vistas", e);
+        alert("No se pudieron resetear las preguntas vistas.");
+      }
+    });
+  }
+
+  // Reset de vistas por tema
+  if (btnResetVistasTema && selectorTemaResetVistas) {
+    btnResetVistasTema.addEventListener("click", () => {
+      const tema = selectorTemaResetVistas.value;
+
+      if (!tema) {
+        alert("Selecciona un tema.");
+        return;
+      }
+
+      if (!confirm(`¿Seguro que quieres resetear las preguntas vistas del tema "${tema}"?`)) {
+        return;
+      }
+
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+
+        const bancoLocal = JSON.parse(raw);
+
+        if (!Array.isArray(bancoLocal[tema])) {
+          alert("Tema no válido.");
+          return;
+        }
+
+        bancoLocal[tema].forEach(p => delete p.vista);
+
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(bancoLocal));
+        alert(`Las preguntas vistas del tema "${tema}" se han reseteado.`);
+        location.reload();
+      } catch (e) {
+        console.error("Error al resetear preguntas vistas por tema", e);
+        alert("No se pudieron resetear las preguntas vistas del tema.");
+      }
+    });
+  }
+});
 
 window.mostrarPantallaInicial = mostrarPantallaInicial;
 window.mostrarPantallaTemas = mostrarPantallaTemas;

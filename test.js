@@ -5,6 +5,12 @@ function ordenNatural(a, b) {
   });
 }
 
+function formatearTexto(str) {
+  if (!str) return "";
+  // Convertir *texto* a <strong>texto</strong>
+  return str.replace(/\*(.*?)\*/g, "<strong>$1</strong>");
+}
+
 // === Mostrar opciones corregidas: a), b), c), d) con colores ===
 function renderizarOpcionesCorregidas(p) {
   let html = "";
@@ -28,7 +34,7 @@ function renderizarOpcionesCorregidas(p) {
 
     html += `
       <div style="${estilo}">
-        ${String.fromCharCode(97 + idx)}) ${op}
+        ${String.fromCharCode(97 + idx)}) ${formatearTexto(op)}
       </div>
     `;
   });
@@ -150,6 +156,25 @@ let segundosRestantes = 0;
 let preguntasEnBlanco = [];
 let testEnCurso = false;
 
+function actualizarBarraProgreso() {
+  const barra = document.getElementById("barraProgresoInterna");
+  const texto = document.getElementById("barraProgresoTexto");
+  const zonaTest = document.getElementById("zonaTest");
+
+  if (!barra || !zonaTest) return;
+
+  const radios = zonaTest.querySelectorAll("input[type=radio]:checked");
+  const total = preguntasTest.length || 1;
+  const respondidas = radios.length;
+
+  const porcentaje = Math.round((respondidas / total) * 100);
+  barra.style.width = porcentaje + "%";
+
+  if (texto) {
+    texto.textContent = `${respondidas} de ${total} respondidas (${porcentaje}%)`;
+  }
+}
+
 
 document.addEventListener("DOMContentLoaded", async () => {
   try {
@@ -260,7 +285,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         // Restaurar respuestas guardadas
         if (Array.isArray(progreso.respuestas)) {
           const zonaTest = document.getElementById("zonaTest");
-          const bloques = zonaTest.querySelectorAll("div");
+          const bloques = zonaTest.querySelectorAll(".bloque-pregunta");
 
           progreso.respuestas.forEach((r, i) => {
             const div = bloques[i];
@@ -334,10 +359,11 @@ function initTest() {
   const configSim = document.getElementById("simulacroConfig");
   const repasoInt = document.getElementById("modoRepasoInteligente");
   const repasoSimple = document.getElementById("modoRepasoSimple");
+  const repasoGeneral = document.getElementById("modoRepasoGeneral");
   const soloNuevas = document.getElementById("soloNuevasToggle");
 
   function desactivarOtrosModos(activo) {
-    const modos = [toggleSim, repasoInt, repasoSimple, soloNuevas];
+    const modos = [toggleSim, repasoInt, repasoSimple, repasoGeneral, soloNuevas];
     modos.forEach(m => {
       if (m && m !== activo) {
         m.checked = false;
@@ -387,6 +413,14 @@ function initTest() {
     });
   }
 
+  if (repasoGeneral) {
+    repasoGeneral.addEventListener("change", () => {
+      if (repasoGeneral.checked) {
+        desactivarOtrosModos(repasoGeneral);
+      }
+    });
+  }
+
   if (soloNuevas) {
     soloNuevas.addEventListener("change", () => {
       if (soloNuevas.checked) {
@@ -432,19 +466,26 @@ function initTest() {
 }
 function crearBloquePregunta(p, i) {
   const div = document.createElement("div");
+  div.classList.add("bloque-pregunta");
   div.style.marginBottom = "15px";
 
   div.innerHTML = `
-    <strong>${i + 1}. ${p.pregunta}</strong>
+    <strong>${i + 1}. ${formatearTexto(p.pregunta)}</strong>
     <label style="margin-left:10px; font-size:12px;">
       <input type="checkbox" class="marcar-pregunta" data-index="${i}" onchange="toggleMarcaPregunta(${i})" ${p.marcada ? "checked" : ""}>
       🔖 Marcar
     </label>
+    <label style="margin-left:10px; font-size:12px;">
+      <input type="checkbox" class="dudosa-pregunta" data-index="${i}" onchange="toggleDudosaPregunta(${i})" ${p.dudosa ? "checked" : ""}>
+      ❓ Dudosa
+    </label>
     <br>
     ${p.opciones.map((op, idx) => `
       <label>
-        <input type="radio" name="p${i}" value="${idx}" onchange="autoGuardarProgreso()">
-        ${String.fromCharCode(97 + idx)}) ${op}
+        <input type="radio" name="p${i}" value="${idx}"
+          onclick="toggleRadioPregunta(${i}, ${idx}, this)"
+          onchange="autoGuardarProgreso(); actualizarBarraProgreso(); actualizarPanelLateral();">
+        ${String.fromCharCode(97 + idx)}) ${formatearTexto(op)}
       </label><br>
     `).join("")}
   `;
@@ -922,12 +963,13 @@ function iniciarTestReal() {
   let num = parseInt(document.getElementById("numPreguntas").value);
 
   const repasoSimpleActivo = document.getElementById("modoRepasoSimple")?.checked;
+  const repasoGeneralActivo = document.getElementById("modoRepasoGeneral")?.checked;
 
   // Si el modo repaso simple está activo, forzar desactivación de los otros modos
   let repasoActivo = document.getElementById("modoRepasoInteligente")?.checked;
   let soloNuevasActivo = document.getElementById("soloNuevasToggle")?.checked;
 
-  if (repasoSimpleActivo) {
+  if (repasoSimpleActivo || repasoGeneralActivo) {
     repasoActivo = false;
     soloNuevasActivo = false;
   }
@@ -985,8 +1027,30 @@ function iniciarTestReal() {
     }
   }
 
-  // --- Modo repaso simple ---
+  // --- Modo nuevas ---
   if (repasoSimpleActivo) {
+    if (isNaN(num) || num <= 0) {
+      num = poolPreguntas.length;
+    }
+
+    if (poolPreguntas.length === 0) {
+      alert("No hay preguntas en los temas seleccionados");
+      return;
+    }
+
+    // Separar nuevas y ya vistas
+    const nuevas = poolPreguntas.filter(p => (p.fallada || 0) === 0);
+    const vistas = poolPreguntas.filter(p => (p.fallada || 0) > 0);
+
+    // Mezclar ambos grupos
+    nuevas.sort(() => Math.random() - 0.5);
+    vistas.sort(() => Math.random() - 0.5);
+
+    // Prioridad: primero nuevas, luego vistas si faltan
+    preguntasTest = [...nuevas, ...vistas].slice(0, num);
+  }
+  // --- Modo repaso general ---
+  else if (repasoGeneralActivo) {
     if (isNaN(num) || num <= 0) {
       num = poolPreguntas.length;
     }
@@ -999,7 +1063,8 @@ function iniciarTestReal() {
     preguntasTest = poolPreguntas
       .sort(() => Math.random() - 0.5)
       .slice(0, num);
-  } else if (repasoActivo) {
+  }
+  else if (repasoActivo) {
     let falladas = [];
     let nuevas = [];
 
@@ -1099,6 +1164,40 @@ function iniciarTestReal() {
     zonaTest.appendChild(crearBloquePregunta(p, i));
   });
 
+  actualizarPanelLateral();
+
+  // Activar botón de panel lateral
+  const btnPanel = document.getElementById("togglePanelBtn");
+  const panel = document.getElementById("panelLateralTest");
+
+  if (btnPanel && panel) {
+    btnPanel.style.display = "block";
+    panel.style.display = "none";
+
+    btnPanel.onclick = () => {
+      panel.style.display = panel.style.display === "none" ? "block" : "none";
+    };
+  }
+
+  // Crear barra de progreso
+  const barraCont = document.createElement("div");
+  barraCont.id = "barraProgresoContenedor";
+  barraCont.style.position = "sticky";
+  barraCont.style.top = "0";
+  barraCont.style.background = "#f3f3f3";
+  barraCont.style.padding = "6px";
+  barraCont.style.zIndex = "10";
+
+  barraCont.innerHTML = `
+    <div style="width:100%; height:10px; background:#ddd; border-radius:5px; overflow:hidden;">
+      <div id="barraProgresoInterna" style="height:100%; width:0%; background:#4caf50; transition:width 0.3s;"></div>
+    </div>
+    <div id="barraProgresoTexto" style="font-size:12px; margin-top:2px; text-align:right;">0%</div>
+  `;
+
+  zonaTest.prepend(barraCont);
+  actualizarBarraProgreso();
+
   if (corregirBtn) {
     corregirBtn.style.display = "block";
   }
@@ -1107,6 +1206,11 @@ function iniciarTestReal() {
 }
 
 function corregirTest() {
+  const btnPanel = document.getElementById("togglePanelBtn");
+  const panel = document.getElementById("panelLateralTest");
+  if (btnPanel) btnPanel.style.display = "none";
+  if (panel) panel.style.display = "none";
+
   testEnCurso = false;
   const zonaTest = document.getElementById("zonaTest");
   const corregirBtn = document.getElementById("corregirBtn");
@@ -1269,6 +1373,8 @@ function corregirTest() {
   } catch (e) {
     console.warn("No se pudo guardar historial:", e);
   }
+  // Limpiar progreso guardado al finalizar el test
+  localStorage.removeItem("progresoTest");
 }
 
 function obtenerTemasSeleccionados() {
@@ -1773,7 +1879,7 @@ function volverASeleccion() {
 
     // Guardar respuestas actuales
     const respuestas = [];
-    const bloques = zonaTest.querySelectorAll("div");
+    const bloques = zonaTest.querySelectorAll(".bloque-pregunta");
 
     bloques.forEach((div, i) => {
       const radio = div.querySelector("input[type=radio]:checked");
@@ -1906,13 +2012,12 @@ function actualizarEstadoBotonEmpezar() {
   const btn = document.getElementById("btnEmpezarTest");
   if (!btn) return;
 
-  // Comprobar si hay algún modo activo
-  const simulacro = document.getElementById("simulacroToggle")?.checked;
-  const repasoInt = document.getElementById("modoRepasoInteligente")?.checked;
-  const repasoSimple = document.getElementById("modoRepasoSimple")?.checked;
-  const soloNuevas = document.getElementById("soloNuevasToggle")?.checked;
+  // Comprobar si hay algún modo activo (robusto: cualquier modo)
+  const cualquierModo = document.querySelector(
+    '#simulacroToggle:checked, #modoRepasoInteligente:checked, #modoRepasoSimple:checked, #modoRepasoGeneral:checked, #soloNuevasToggle:checked'
+  );
 
-  const hayModoActivo = simulacro || repasoInt || repasoSimple || soloNuevas;
+  const hayModoActivo = !!cualquierModo;
 
   btn.disabled = !hayModoActivo;
   btn.classList.toggle("btn-disabled", !hayModoActivo);
@@ -1935,7 +2040,7 @@ function autoGuardarProgreso() {
   const zonaTest = document.getElementById("zonaTest");
   if (!zonaTest || !preguntasTest || preguntasTest.length === 0) return;
 
-  const bloques = zonaTest.querySelectorAll("div");
+  const bloques = zonaTest.querySelectorAll(".bloque-pregunta");
   const respuestas = [];
 
   bloques.forEach((div, i) => {
@@ -2013,7 +2118,7 @@ function toggleMarcaPregunta(index) {
   const zonaTest = document.getElementById("zonaTest");
   if (!zonaTest) return;
 
-  const bloques = zonaTest.querySelectorAll("div");
+  const bloques = zonaTest.querySelectorAll(".bloque-pregunta");
   const div = bloques[index];
   if (!div) return;
 
@@ -2027,6 +2132,131 @@ function toggleMarcaPregunta(index) {
     p.marcada = false;
     desmarcarPreguntaRemoto(p.id);
   }
+
+  actualizarPanelLateral();
+}
+
+function toggleDudosaPregunta(index) {
+  const p = preguntasTest[index];
+  if (!p) return;
+
+  const zonaTest = document.getElementById("zonaTest");
+  if (!zonaTest) return;
+
+  const bloques = zonaTest.querySelectorAll(".bloque-pregunta");
+  const div = bloques[index];
+  if (!div) return;
+
+  const check = div.querySelector(".dudosa-pregunta");
+  if (!check) return;
+
+  p.dudosa = !!check.checked;
+  actualizarPanelLateral();
+}
+
+function dejarEnBlanco(index) {
+  const zonaTest = document.getElementById("zonaTest");
+  if (!zonaTest) return;
+
+  const bloques = zonaTest.querySelectorAll(".bloque-pregunta");
+  const div = bloques[index];
+  if (!div) return;
+
+  const radios = div.querySelectorAll("input[type=radio]");
+  radios.forEach(r => {
+    r.checked = false;
+    if (r.dataset) r.dataset.activo = "false";
+  });
+
+  autoGuardarProgreso();
+  actualizarBarraProgreso();
+  actualizarPanelLateral();
+}
+
+// Nueva función para controlar el comportamiento de los radios de pregunta
+function toggleRadioPregunta(index, valor, radioEl) {
+  const zonaTest = document.getElementById("zonaTest");
+  if (!zonaTest) return;
+
+  const bloques = zonaTest.querySelectorAll(".bloque-pregunta");
+  const div = bloques[index];
+  if (!div) return;
+
+  const radios = div.querySelectorAll("input[type=radio]");
+
+  // Si ya estaba seleccionado ese mismo valor, desmarcar todo
+  if (radioEl.dataset.activo === "true") {
+    radios.forEach(r => {
+      r.checked = false;
+      r.dataset.activo = "false";
+    });
+
+    autoGuardarProgreso();
+    actualizarBarraProgreso();
+    actualizarPanelLateral();
+    return;
+  }
+
+  // Marcar solo el seleccionado
+  radios.forEach(r => r.dataset.activo = "false");
+  radioEl.dataset.activo = "true";
+}
+
+function actualizarPanelLateral() {
+  const panel = document.getElementById("panelLateralTest");
+  if (!panel || !preguntasTest) return;
+
+  panel.style.display = "block";
+
+  const contestadas = [];
+  const marcadas = [];
+  const dudosas = [];
+  const enBlanco = [];
+
+  const zonaTest = document.getElementById("zonaTest");
+  const bloques = zonaTest ? zonaTest.querySelectorAll(".bloque-pregunta") : [];
+
+  preguntasTest.forEach((p, i) => {
+    const div = bloques[i];
+    const radio = div ? div.querySelector("input[type=radio]:checked") : null;
+
+    if (radio) contestadas.push(i);
+    else enBlanco.push(i);
+
+    if (p.marcada) marcadas.push(i);
+    if (p.dudosa) dudosas.push(i);
+  });
+
+  function renderBloque(titulo, lista, id) {
+    return `
+      <div style="margin-bottom:10px;">
+        <div 
+          style="font-weight:600; margin-bottom:4px; cursor:pointer;"
+          onclick="(function(){
+            const el = document.getElementById('${id}');
+            if (!el) return;
+            el.style.display = el.style.display === 'none' ? 'block' : 'none';
+          })()"
+        >
+          ▸ ${titulo} [${lista.length}]
+        </div>
+        <div id="${id}" style="font-size:12px; max-height:120px; overflow-y:auto; display:none;">
+          ${lista.map(i => `
+            <div style="margin-bottom:6px; cursor:pointer;" onclick="document.querySelectorAll('#zonaTest .bloque-pregunta')[${i}].scrollIntoView({behavior:'smooth'})">
+              ${i + 1}. ${preguntasTest[i].pregunta}
+            </div>
+          `).join("")}
+        </div>
+      </div>
+    `;
+  }
+
+  panel.innerHTML = `
+    ${renderBloque("Contestadas", contestadas, "panelContestadas")}
+    ${renderBloque("Marcadas", marcadas, "panelMarcadas")}
+    ${renderBloque("Dudosas", dudosas, "panelDudosas")}
+    ${renderBloque("En blanco", enBlanco, "panelBlanco")}
+  `;
 }
 
 window.mostrarPantallaInicial = mostrarPantallaInicial;

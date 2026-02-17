@@ -55,7 +55,7 @@ function resaltarTexto(textoOriginal, terminoBusqueda) {
 // ====== FORMATEAR NEGRITA MARKDOWN ======
 function formatearNegrita(texto) {
   if (!texto) return "";
-  return texto.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+  return texto.replace(/\*(.*?)\*/g, "<strong>$1</strong>");
 }
 
 /* ====== INICIALIZACIÓN ====== */

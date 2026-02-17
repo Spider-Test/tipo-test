@@ -565,9 +565,20 @@ button[onclick*="blanco"] {
 
   <!-- Modo repaso simple -->
   <div style="display:flex; align-items:center; justify-content:space-between;">
-    <span style="font-weight:600;">Modo repaso</span>
+    <span style="font-weight:600;">Modo nuevas</span>
     <label class="ios-switch">
       <input type="checkbox" id="modoRepasoSimple">
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <hr style="margin:14px 0; border:none; border-top:1px solid var(--border-main);">
+
+  <!-- Modo repaso general -->
+  <div style="display:flex; align-items:center; justify-content:space-between;">
+    <span style="font-weight:600;">Modo repaso</span>
+    <label class="ios-switch">
+      <input type="checkbox" id="modoRepasoGeneral">
       <span class="slider"></span>
     </label>
   </div>
@@ -695,7 +706,37 @@ button[onclick*="blanco"] {
   ⏱️ Tiempo: <span id="tiempoTest">00:00</span>
 </div>
 
-<div id="zonaTest"></div>
+<div style="display:flex; gap:16px; align-items:flex-start;">
+  <div id="zonaTest" style="flex:1;"></div>
+
+  <div style="position:relative;">
+    <button id="togglePanelBtn" style="
+      position:sticky;
+      top:20px;
+      margin-bottom:8px;
+      background:var(--bg-card);
+      border:none;
+      padding:8px 10px;
+      border-radius:8px;
+      box-shadow:0 4px 12px var(--shadow-main);
+      cursor:pointer;
+      display:none;
+    ">☰</button>
+
+    <div id="panelLateralTest" style="
+      width:260px;
+      max-height:80vh;
+      overflow-y:auto;
+      position:sticky;
+      top:60px;
+      background:var(--bg-card);
+      border-radius:14px;
+      padding:10px;
+      box-shadow:0 6px 18px var(--shadow-main);
+      display:none;
+    "></div>
+  </div>
+</div>
 <button id="corregirBtn" onclick="corregirTest()">
   Corregir test
 </button>
@@ -793,6 +834,7 @@ button[onclick*="blanco"] {
     document.getElementById("simulacroToggle"),
     document.getElementById("modoRepasoInteligente"),
     document.getElementById("modoRepasoSimple"),
+    document.getElementById("modoRepasoGeneral"),
     document.getElementById("soloNuevasToggle")
   ].filter(Boolean);
 

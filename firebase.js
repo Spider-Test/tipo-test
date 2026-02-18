@@ -18,6 +18,7 @@ window.doc = doc;
 window.setDoc = setDoc;
 window.collection = collection;
 window.getDocs = getDocs;
+window.getDoc = getDoc;
 window.deleteDoc = deleteDoc;
 window.addDoc = addDoc;
 const auth = getAuth(app);
@@ -63,6 +64,24 @@ async function inicializarAuth() {
 }
 
 inicializarAuth();
+
+// Esperar a que la autenticación esté lista y cargar progreso remoto
+async function sincronizarProgresoInicial() {
+  try {
+    // Esperar a que Firebase auth esté listo
+    while (!window.authReady) {
+      await new Promise(r => setTimeout(r, 100));
+    }
+
+    const remoto = await window.cargarProgresoRemoto();
+    if (remoto) {
+      localStorage.setItem("progresoTest", JSON.stringify(remoto));
+      console.log("Progreso remoto sincronizado a localStorage");
+    }
+  } catch (e) {
+    console.warn("No se pudo sincronizar progreso remoto", e);
+  }
+}
 
 export async function guardarEnFirebase(pregunta) {
   try {
@@ -270,4 +289,16 @@ async function migrarEstructuraReal() {
 }
 
 // Exponer a la consola para ejecutarla manualmente
+
+// ===== MARCAR PREGUNTA COMO VISTA =====
+window.actualizarVista = async function (id, valor) {
+  try {
+    const ref = doc(db, "preguntas", id);
+    await updateDoc(ref, { vista: valor });
+    console.log("Vista actualizada en Firebase:", id, valor);
+  } catch (err) {
+    console.error("Error actualizando vista", err);
+  }
+};
+
 window.migrarEstructuraReal = migrarEstructuraReal;

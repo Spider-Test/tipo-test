@@ -1,3 +1,42 @@
+async function cargarProgresoRemoto() {
+  try {
+    if (!window.usuarioActual || !window.db) return null;
+
+    const ref = window.doc(window.db, "usuarios", window.usuarioActual.uid);
+    const snap = await window.getDoc(ref);
+
+    if (snap.exists()) {
+      const data = snap.data();
+
+      if (data.progresoTest) {
+        // Guardar siempre en localStorage
+        localStorage.setItem("progresoTest", JSON.stringify(data.progresoTest));
+        console.log("Progreso remoto cargado y guardado en localStorage");
+        return data.progresoTest;
+      }
+    }
+  } catch (e) {
+    console.error("Error cargando progreso remoto:", e);
+  }
+  return null;
+}
+
+// Exponer globalmente para otras funciones
+window.cargarProgresoRemoto = cargarProgresoRemoto;
+
+async function sincronizarProgresoInicial() {
+  try {
+    if (window.cargarProgresoRemoto) {
+      const remoto = await window.cargarProgresoRemoto();
+      if (remoto) {
+        localStorage.setItem("progresoTest", JSON.stringify(remoto));
+        console.log("Progreso sincronizado desde Firebase");
+      }
+    }
+  } catch (e) {
+    console.warn("No se pudo sincronizar el progreso inicial:", e);
+  }
+}
 function ordenNatural(a, b) {
   return a.localeCompare(b, "es", {
     numeric: true,
@@ -148,10 +187,12 @@ let ultimaConfiguracionTest = null;
 let fallosSesionAntes = 0;
 let fallosSesionDespues = 0;
 
+
 let cronometroInterval = null;
 let segundosTest = 0;
 let modoSimulacro = false;
 let segundosRestantes = 0;
+let cronometroPausado = false;
 
 let preguntasEnBlanco = [];
 let testEnCurso = false;
@@ -177,6 +218,7 @@ function actualizarBarraProgreso() {
 
 
 document.addEventListener("DOMContentLoaded", async () => {
+  await sincronizarProgresoInicial();
   try {
     if (window.cargarDesdeFirebase) {
       banco = await window.cargarDesdeFirebase();
@@ -192,6 +234,26 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
       });
 
+      // Mezclar estado "vista" guardado localmente para no perder progreso
+      try {
+        const bancoLocal = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+
+        Object.keys(banco).forEach(tema => {
+          if (!Array.isArray(banco[tema])) return;
+          banco[tema].forEach(p => {
+            const localTema = bancoLocal[tema];
+            if (!Array.isArray(localTema)) return;
+
+            const match = localTema.find(lp => (lp.id && lp.id === p.id) || lp.pregunta === p.pregunta);
+            if (match && match.vista) {
+              p.vista = true;
+            }
+          });
+        });
+      } catch (e) {
+        console.warn("No se pudo mezclar estado vista local:", e);
+      }
+
       // Guardar copia local para modo offline
       localStorage.setItem(STORAGE_KEY, JSON.stringify(banco));
     } else {
@@ -203,7 +265,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     banco = cargarBancoLocal();
   }
 
-  initTest();
 
   // ===== CARGAR PREGUNTAS MARCADAS DEL USUARIO =====
   try {
@@ -245,6 +306,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   } catch (e) {
     console.warn("No se pudieron cargar las preguntas marcadas:", e);
   }
+  initTest();
 
   // Reanudar test si hay progreso guardado
   try {
@@ -503,6 +565,11 @@ function crearBloquePregunta(p, i) {
   div.style.marginBottom = "15px";
 
   div.innerHTML = `
+    <div class="info-tema linea-tema" style="font-size:12px; opacity:0.7; margin-bottom:4px;">
+      ${(p.tema && p.subtema) ? (p.tema + " · " + p.subtema)
+        : (p.tema ? p.tema
+        : (p.subtema ? p.subtema : ""))}
+    </div>
     <strong>${i + 1}. ${formatearTexto(p.pregunta)}</strong>
     <label style="margin-left:10px; font-size:12px;">
       <input type="checkbox" class="marcar-pregunta" data-index="${i}" onchange="toggleMarcaPregunta(${i})" ${p.marcada ? "checked" : ""}>
@@ -536,14 +603,10 @@ function pintarCheckboxesTemas() {
   contenedor.innerHTML = "";
 
   let temasOrdenados = Object.keys(banco)
-    .filter(t => t !== "__falladas__")
+    .filter(t => t !== "__falladas__" && t !== "__marcadas__")
     .sort(ordenNatural);
 
-  // Añadir el tema especial al final si existe
-  if (banco["__falladas__"]) {
-    temasOrdenados.push("__falladas__");
-  }
-  // Añadir tema especial de preguntas marcadas
+  // Añadir solo el tema especial de preguntas marcadas al final
   temasOrdenados.push("__marcadas__");
 
   temasOrdenados.forEach(tema => {
@@ -766,6 +829,24 @@ function mostrarPantallaInicial() {
   if (resumen) resumen.style.display = "none";
 
   ocultarCronometro();
+
+  const cron = document.getElementById("cronometro");
+  const tiempo = document.getElementById("tiempoTest");
+
+  if (cron) {
+    cron.style.display = "none";
+    cron.dataset.oculto = "true";
+  }
+
+  if (tiempo) {
+    tiempo.style.display = "none";
+  }
+
+  // Ocultar el botón de pausa al mostrar la pantalla inicial
+  const btnPausa = document.getElementById("btnPausaTest");
+  if (btnPausa) {
+    btnPausa.style.display = "none";
+  }
 }
 
 function mostrarPantallaTemas() {
@@ -1029,6 +1110,7 @@ function iniciarTestReal() {
     if (!subtema) {
       // Tema completo
       preguntasTema.forEach(p => {
+        p.tema = tema; // asegurar nombre de tema
         poolPreguntas.push(p);
       });
     } else {
@@ -1036,6 +1118,7 @@ function iniciarTestReal() {
       preguntasTema.forEach(p => {
         const sub = p.subtema || "General";
         if (sub === subtema) {
+          p.tema = tema; // asegurar nombre de tema
           poolPreguntas.push(p);
         }
       });
@@ -1206,6 +1289,11 @@ function iniciarTestReal() {
   // Marcar preguntas como vistas
   preguntasTest.forEach(p => {
     p.vista = true;
+
+    // Sincronizar vista en Firebase si existe la función
+    if (p.id && window.actualizarVista) {
+      window.actualizarVista(p.id, true);
+    }
   });
 
   // Guardar banco actualizado
@@ -1258,6 +1346,14 @@ function iniciarTestReal() {
   }
   // Iniciar el cronómetro justo después de pintar preguntas (modo normal)
   iniciarCronometro();
+  // Reaplicar visibilidad de tema tras renderizar preguntas
+  const toggleTema = document.getElementById("toggleMostrarTema");
+  if (toggleTema) {
+    const temas = document.querySelectorAll(".info-tema, .linea-tema");
+    temas.forEach(el => {
+      el.style.display = toggleTema.checked ? "" : "none";
+    });
+  }
 }
 
 function corregirTest() {
@@ -1361,6 +1457,17 @@ function corregirTest() {
   zonaTest.style.display = "none";
   detenerCronometro();
   mostrarTiempoFinal();
+  // Ocultar cronómetro tras corregir el test
+  ocultarCronometro();
+  const cron = document.getElementById("cronometro");
+  const tiempo = document.getElementById("tiempoTest");
+  if (cron) {
+    cron.style.display = "none";
+    cron.dataset.oculto = "true";
+  }
+  if (tiempo) {
+    tiempo.style.display = "none";
+  }
 
   const pantallaSeleccion = document.getElementById("pantallaSeleccion");
   if (pantallaSeleccion) pantallaSeleccion.style.display = "none";
@@ -1969,6 +2076,17 @@ function volverASeleccion() {
   mostrarPantallaInicial();
 
   ocultarCronometro();
+  const cron = document.getElementById("cronometro");
+  const tiempo = document.getElementById("tiempoTest");
+
+  if (cron) {
+    cron.style.display = "none";
+    cron.dataset.oculto = "true";
+  }
+
+  if (tiempo) {
+    tiempo.style.display = "none";
+  }
 
   if (typeof cargarTemas === "function") {
     cargarTemas();
@@ -1994,7 +2112,22 @@ function iniciarCronometro() {
   detenerCronometro();
 
   const cont = document.getElementById("cronometro");
-  if (cont) cont.style.display = "block";
+  const tiempo = document.getElementById("tiempoTest");
+
+  if (cont) {
+    cont.style.display = "block";
+    cont.dataset.oculto = "false";
+  }
+
+  if (tiempo) {
+    tiempo.style.display = "inline";
+  }
+
+  // Mostrar el botón de pausa durante el test
+  const btnPausa = document.getElementById("btnPausaTest");
+  if (btnPausa) {
+    btnPausa.style.display = "inline-block";
+  }
 
   if (modoSimulacro) {
     const minutos = parseInt(document.getElementById("tiempoSimulacro")?.value);
@@ -2004,6 +2137,8 @@ function iniciarCronometro() {
     actualizarVistaCronometro();
 
     cronometroInterval = setInterval(() => {
+      if (cronometroPausado) return;
+
       segundosRestantes--;
       segundosTest++;
 
@@ -2020,6 +2155,8 @@ function iniciarCronometro() {
     actualizarVistaCronometro();
 
     cronometroInterval = setInterval(() => {
+      if (cronometroPausado) return;
+
       segundosTest++;
       actualizarVistaCronometro();
     }, 1000);
@@ -2047,8 +2184,55 @@ function actualizarVistaCronometro() {
 function ocultarCronometro() {
   detenerCronometro();
   const cont = document.getElementById("cronometro");
-  if (cont) cont.style.display = "none";
+  const tiempo = document.getElementById("tiempoTest");
+  if (!cont || !tiempo) return;
+
+  // Mantener visible el icono, ocultar solo el tiempo
+  cont.style.display = "block";
+  tiempo.style.display = "none";
+  cont.dataset.oculto = "true";
 }
+
+// ===== TOGGLE VISIBILIDAD DEL CRONÓMETRO =====
+function toggleVisibilidadCronometro() {
+  const cont = document.getElementById("cronometro");
+  const tiempo = document.getElementById("tiempoTest");
+  if (!cont || !tiempo) return;
+
+  // Solo alternar el tiempo, nunca el icono
+  if (cont.dataset.oculto === "true") {
+    tiempo.style.display = "inline";
+    cont.dataset.oculto = "false";
+  } else {
+    tiempo.style.display = "none";
+    cont.dataset.oculto = "true";
+  }
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+  const cont = document.getElementById("cronometro");
+  const tiempo = document.getElementById("tiempoTest");
+
+  if (!cont || !tiempo) return;
+
+  cont.style.cursor = "pointer";
+  cont.title = "Mostrar u ocultar tiempo";
+  cont.addEventListener("click", toggleVisibilidadCronometro);
+
+  // Estado inicial: tiempo visible
+  tiempo.style.display = "inline";
+  cont.dataset.oculto = "false";
+
+  // Asegurar que el cronómetro está oculto en la pantalla de inicio
+  if (cont) {
+    cont.style.display = "none";
+    cont.dataset.oculto = "true";
+  }
+
+  if (tiempo) {
+    tiempo.style.display = "none";
+  }
+});
 
 /* ===== TIEMPO FINAL EN RESUMEN ===== */
 
@@ -2261,7 +2445,6 @@ function actualizarPanelLateral() {
   const panel = document.getElementById("panelLateralTest");
   if (!panel || !preguntasTest) return;
 
-  panel.style.display = "block";
 
   const contestadas = [];
   const marcadas = [];
@@ -2306,7 +2489,11 @@ function actualizarPanelLateral() {
     `;
   }
 
-  panel.innerHTML = `
+  const panelFiltro = document.getElementById("panelFiltroPreguntas");
+  if (!panelFiltro) return;
+
+  // Limpiar contenido previo para evitar duplicados
+  panelFiltro.innerHTML = `
     ${renderBloque("Contestadas", contestadas, "panelContestadas")}
     ${renderBloque("Marcadas", marcadas, "panelMarcadas")}
     ${renderBloque("Dudosas", dudosas, "panelDudosas")}
@@ -2337,7 +2524,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Reset global de vistas
   if (btnResetVistas) {
-    btnResetVistas.addEventListener("click", () => {
+    btnResetVistas.addEventListener("click", (e) => {
+      e.preventDefault();
       if (!confirm("¿Seguro que quieres resetear TODAS las preguntas vistas?")) return;
 
       try {
@@ -2372,7 +2560,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Reset de vistas por tema
   if (btnResetVistasTema && selectorTemaResetVistas) {
-    btnResetVistasTema.addEventListener("click", () => {
+    btnResetVistasTema.addEventListener("click", (e) => {
+      e.preventDefault();
       const tema = selectorTemaResetVistas.value;
 
       if (!tema) {
@@ -2416,3 +2605,157 @@ window.mostrarPantallaInicial = mostrarPantallaInicial;
 window.mostrarPantallaTemas = mostrarPantallaTemas;
 window.mostrarPantallaHistorial = mostrarPantallaHistorial;
 window.iniciarTest = iniciarTest;
+
+function toggleFiltroPreguntas() {
+  const cont = document.getElementById("panelFiltroPreguntas");
+  if (!cont) return;
+
+  if (cont.style.display === "none" || cont.style.display === "") {
+    cont.style.display = "block";
+  } else {
+    cont.style.display = "none";
+  }
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+  const btn = document.getElementById("btnFiltroPreguntas");
+  const cont = document.getElementById("panelFiltroPreguntas");
+
+  if (cont) {
+    cont.style.display = "block"; // empezar desplegado
+  }
+
+  if (btn) {
+    btn.addEventListener("click", toggleFiltroPreguntas);
+  }
+});
+// ===== AJUSTES DE VISUALIZACIÓN (FUENTE Y TEMA) =====
+window.addEventListener("DOMContentLoaded", () => {
+
+  // Ajuste de tamaño de fuente (slider numérico)
+  const selectorFuente = document.getElementById("selectorTamanoFuente");
+  const valorFuente = document.getElementById("valorTamanoFuente");
+  if (selectorFuente) {
+    const aplicarTamano = () => {
+      const contenedor = document.getElementById("contenedor-test") || document.getElementById("zonaTest");
+      if (!contenedor) return;
+
+      const valor = parseInt(selectorFuente.value, 10) || 16;
+      const size = valor + "px";
+      contenedor.style.fontSize = size;
+
+      if (valorFuente) {
+        valorFuente.textContent = size;
+      }
+    };
+
+    selectorFuente.addEventListener("input", aplicarTamano);
+    selectorFuente.addEventListener("change", aplicarTamano);
+    aplicarTamano();
+  }
+
+  // Mostrar / ocultar línea de tema
+  const toggleTema = document.getElementById("toggleMostrarTema");
+  if (toggleTema) {
+    // Activar por defecto
+    if (toggleTema.checked === false) {
+      toggleTema.checked = true;
+    }
+
+    const aplicarVisibilidadTema = () => {
+      const temas = document.querySelectorAll(".info-tema, .linea-tema");
+      temas.forEach(el => {
+        el.style.display = toggleTema.checked ? "" : "none";
+      });
+    };
+
+    toggleTema.addEventListener("change", aplicarVisibilidadTema);
+    aplicarVisibilidadTema();
+  }
+
+});
+
+function pausarTest() {
+  cronometroPausado = !cronometroPausado;
+
+  const btn = document.getElementById("btnPausaTest");
+  if (btn) {
+    btn.textContent = cronometroPausado ? "▶️" : "⏸️";
+  }
+
+  let overlay = document.getElementById("overlayPausaTest");
+
+  // Si se activa la pausa
+  if (cronometroPausado) {
+    if (!overlay) {
+      overlay = document.createElement("div");
+      overlay.id = "overlayPausaTest";
+      overlay.style.position = "fixed";
+      overlay.style.top = "0";
+      overlay.style.left = "0";
+      overlay.style.width = "100%";
+      overlay.style.height = "100%";
+      overlay.style.background = "rgba(0,0,0,0.6)";
+      overlay.style.display = "flex";
+      overlay.style.alignItems = "center";
+      overlay.style.justifyContent = "center";
+      overlay.style.zIndex = "9999";
+
+      const caja = document.createElement("div");
+      caja.style.background = "#fff";
+      caja.style.padding = "20px 30px";
+      caja.style.borderRadius = "10px";
+      caja.style.textAlign = "center";
+      caja.style.boxShadow = "0 4px 20px rgba(0,0,0,0.3)";
+
+      const titulo = document.createElement("div");
+      titulo.textContent = "Test en pausa";
+      titulo.style.fontSize = "20px";
+      titulo.style.marginBottom = "12px";
+
+      const btnReanudar = document.createElement("button");
+      btnReanudar.textContent = "Reanudar";
+      btnReanudar.style.fontSize = "14px";
+      btnReanudar.style.padding = "6px 12px";
+      btnReanudar.style.cursor = "pointer";
+      btnReanudar.onclick = pausarTest;
+
+      caja.appendChild(titulo);
+      caja.appendChild(btnReanudar);
+      overlay.appendChild(caja);
+      document.body.appendChild(overlay);
+    } else {
+      overlay.style.display = "flex";
+    }
+  } 
+  // Si se reanuda
+  else {
+    if (overlay) {
+      overlay.style.display = "none";
+    }
+  }
+}
+// ===== ATAJOS DE TECLADO: ESPACIO (PAUSA) Y ENTER (CORREGIR) =====
+document.addEventListener("keydown", function (e) {
+  const tag = document.activeElement.tagName;
+  if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+
+  // Espacio → pausar/reanudar
+  if (e.code === "Space") {
+    e.preventDefault();
+    if (typeof testEnCurso !== "undefined" && testEnCurso) {
+      pausarTest();
+    }
+  }
+
+  // Enter → corregir test con confirmación
+  if (e.code === "Enter") {
+    if (typeof testEnCurso !== "undefined" && testEnCurso && !cronometroPausado) {
+      e.preventDefault();
+      const confirmar = confirm("¿Quieres corregir el test ahora?");
+      if (confirmar && typeof corregirTest === "function") {
+        corregirTest();
+      }
+    }
+  }
+});

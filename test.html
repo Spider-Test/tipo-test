@@ -197,13 +197,6 @@
       box-shadow: 0 4px 12px var(--shadow-main);
     }
 
-    /* ===== CRONÓMETRO ===== */
-    #cronometro {
-      background: var(--bg-card);
-      padding: 10px 14px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px var(--shadow-main);
-    }
 
     /* ===== SECCIONES DESPLEGABLES ===== */
     #seccionFalladas,
@@ -488,18 +481,32 @@ button[onclick*="blanco"] {
     }
 
     #cronometro {
-      display: none;
-      font-weight: bold;
-      margin-bottom: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 3px 8px;
+      font-size: 12px;
+      border-radius: 6px;
+      background: var(--bg-card);
+      box-shadow: 0 1px 4px var(--shadow-main);
+      margin: 8px auto 12px auto;
+      width: fit-content;
+      text-align: center;
     }
 
     #resumenTest {
       display: none;
     }
 
+    #corregirContenedor {
+      text-align: center;
+      margin: 24px auto 40px;
+    }
+
     #corregirBtn {
       display: none;
-      margin: 20px auto 60px; /* separa el botón del borde inferior */
+      margin: 0 auto;
     }
 
     #btnEmpezarTest {
@@ -702,11 +709,26 @@ button[onclick*="blanco"] {
   </div>
 </div>
 
-<div id="cronometro">
-  ⏱️ Tiempo: <span id="tiempoTest">00:00</span>
+
+<div style="text-align:center; margin-bottom:6px;">
+<button id="btnPausaTest" onclick="pausarTest()" style="
+    display:none;
+    border:none;
+    background:var(--bg-card);
+    font-size:16px;
+    cursor:pointer;
+    padding:6px 10px;
+    border-radius:8px;
+    box-shadow:0 1px 4px var(--shadow-main);
+  ">⏸️</button>
 </div>
 
-<div style="display:flex; gap:16px; align-items:flex-start;">
+<div id="cronometro">
+  <span id="iconoCrono">⏱️</span>
+  <span id="tiempoTest">00:00</span>
+</div>
+
+<div style="display:flex; gap:16px; align-items:flex-start; max-width:1100px; margin:0 auto;">
   <div id="zonaTest" style="flex:1;"></div>
 
   <div style="position:relative;">
@@ -724,7 +746,7 @@ button[onclick*="blanco"] {
     ">☰</button>
 
     <div id="panelLateralTest" style="
-      width:260px;
+      width:auto;
       max-height:80vh;
       overflow-y:auto;
       position:sticky;
@@ -734,12 +756,69 @@ button[onclick*="blanco"] {
       padding:10px;
       box-shadow:0 6px 18px var(--shadow-main);
       display:none;
-    "></div>
+    ">
+
+  <!-- Desplegable Filtrar preguntas -->
+  <div id="btnFiltroPreguntas" style="
+    font-weight:600;
+    padding:8px 6px;
+    cursor:pointer;
+    border-radius:8px;
+  ">
+    🔎 Filtrar preguntas ▾
+  </div>
+
+  <div id="panelFiltroPreguntas" class="oculto" style="margin-left:8px;">
+    <div id="filtroContestadas" style="padding:6px 0;">Contestadas</div>
+    <div id="filtroMarcadas" style="padding:6px 0;">📌 Marcadas</div>
+    <div id="filtroDudosas" style="padding:6px 0;">Dudosas</div>
+    <div id="filtroBlanco" style="padding:6px 0;">En blanco</div>
+  </div>
+
+  <hr style="margin:10px 0; border:none; border-top:1px solid var(--border-main);">
+
+  <!-- Ajustes del test -->
+  <div style="font-weight:600; padding:8px 6px;">
+    ⚙️ Ajustes
+  </div>
+
+  <!-- Tamaño de fuente -->
+  <div style="padding:6px 0;">
+    <label for="selectorTamanoFuente" style="font-size:13px; color:var(--accent-muted);">
+      Tamaño de fuente: <span id="valorTamanoFuente">16</span>px
+    </label>
+    <input
+      type="range"
+      id="selectorTamanoFuente"
+      min="12"
+      max="24"
+      step="1"
+      value="16"
+      style="width:100%; margin-top:6px;"
+    >
+  </div>
+
+  <!-- Mostrar tema -->
+  <div style="
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-top:10px;
+  ">
+    <span style="font-size:14px;">Mostrar tema</span>
+    <label class="ios-switch">
+      <input type="checkbox" id="toggleMostrarTema" checked>
+      <span class="slider"></span>
+    </label>
+  </div>
   </div>
 </div>
-<button id="corregirBtn" onclick="corregirTest()">
-  Corregir test
-</button>
+</div>
+<div id="corregirContenedor">
+  <button id="corregirBtn" onclick="corregirTest()">
+    Corregir test
+  </button>
+</div>
 
 <div id="resumenTest">
 

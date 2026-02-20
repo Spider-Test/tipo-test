@@ -14,6 +14,8 @@ function mostrarEditor() {
 
   if (btnEditor) btnEditor.classList.add("activo");
   if (btnTest) btnTest.classList.remove("activo");
+
+  guardarModo("editor");
 }
 
 // Mostrar Test
@@ -23,10 +25,42 @@ function mostrarTest() {
 
   if (btnTest) btnTest.classList.add("activo");
   if (btnEditor) btnEditor.classList.remove("activo");
+
+  guardarModo("test");
 }
 
-// Estado inicial
-mostrarEditor();
+// ===== RESTAURAR ÚLTIMA PANTALLA POR USUARIO =====
+function obtenerClaveModo() {
+  const uid = window.usuarioActual?.uid || "guest";
+  return "modoApp_" + uid;
+}
+
+function guardarModo(modo) {
+  localStorage.setItem(obtenerClaveModo(), modo);
+}
+
+function restaurarModo() {
+  const modoGuardado = localStorage.getItem(obtenerClaveModo());
+
+  if (modoGuardado === "editor") {
+    mostrarEditor();
+  } else {
+    // Por defecto abre TEST
+    mostrarTest();
+  }
+}
+
+// Restaurar modo cuando Firebase haya definido el usuario
+document.addEventListener("DOMContentLoaded", () => {
+  if (window.firebase && firebase.auth) {
+    firebase.auth().onAuthStateChanged(() => {
+      restaurarModo();
+    });
+  } else {
+    // Si no hay auth, restaurar directamente
+    restaurarModo();
+  }
+});
 
 // Eventos
 if (btnEditor) {

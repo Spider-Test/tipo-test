@@ -1516,6 +1516,11 @@ function corregirTest() {
   if (tiempo) {
     tiempo.style.display = "none";
   }
+  // Ocultar botón de pausa al entrar en corrección
+  const btnPausa = document.getElementById("btnPausaTest");
+  if (btnPausa) {
+    btnPausa.style.display = "none";
+  }
 
   const pantallaSeleccion = document.getElementById("pantallaSeleccion");
   if (pantallaSeleccion) pantallaSeleccion.style.display = "none";

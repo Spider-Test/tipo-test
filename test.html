@@ -102,6 +102,22 @@
       margin-bottom: 0;
     }
 
+    /* ===== PANEL LATERAL: ESTABILIDAD EN SIMULACRO ===== */
+    #panelLateralTest {
+      max-height: 80vh;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    #panelLateralTest * {
+      box-sizing: border-box;
+    }
+
+    /* Contenedor interno del filtro siempre colapsado por defecto */
+    .oculto {
+      display: none;
+    }
+
     /* ===== CABECERAS ===== */
     h1 {
       font-size: 24px;
@@ -731,6 +747,33 @@ button[onclick*="blanco"] {
 <div style="display:flex; gap:16px; align-items:flex-start; max-width:1100px; margin:0 auto;">
   <div id="zonaTest" style="flex:1;"></div>
 
+  <div id="controlesModoFoco" style="
+    display:none;
+    text-align:center;
+    margin:16px 0 8px;
+  ">
+    <button id="btnAnteriorPregunta" style="
+      margin-right:10px;
+      padding:6px 12px;
+      border-radius:8px;
+      border:1px solid var(--border-main);
+      background:var(--bg-card);
+      cursor:pointer;
+    ">
+      ⬅️ Anterior
+    </button>
+
+    <button id="btnSiguientePregunta" style="
+      padding:6px 12px;
+      border-radius:8px;
+      border:1px solid var(--border-main);
+      background:var(--bg-card);
+      cursor:pointer;
+    ">
+      Siguiente ➡️
+    </button>
+  </div>
+
   <div style="position:relative;">
     <button id="togglePanelBtn" style="
       position:sticky;
@@ -758,24 +801,7 @@ button[onclick*="blanco"] {
       display:none;
     ">
 
-  <!-- Desplegable Filtrar preguntas -->
-  <div id="btnFiltroPreguntas" style="
-    font-weight:600;
-    padding:8px 6px;
-    cursor:pointer;
-    border-radius:8px;
-  ">
-    🔎 Filtrar preguntas ▾
-  </div>
-
-  <div id="panelFiltroPreguntas" class="oculto" style="margin-left:8px;">
-    <div id="filtroContestadas" style="padding:6px 0;">Contestadas</div>
-    <div id="filtroMarcadas" style="padding:6px 0;">📌 Marcadas</div>
-    <div id="filtroDudosas" style="padding:6px 0;">Dudosas</div>
-    <div id="filtroBlanco" style="padding:6px 0;">En blanco</div>
-  </div>
-
-  <hr style="margin:10px 0; border:none; border-top:1px solid var(--border-main);">
+  
 
   <!-- Ajustes del test -->
   <div style="font-weight:600; padding:8px 6px;">
@@ -808,6 +834,19 @@ button[onclick*="blanco"] {
     <span style="font-size:14px;">Mostrar tema</span>
     <label class="ios-switch">
       <input type="checkbox" id="toggleMostrarTema" checked>
+      <span class="slider"></span>
+    </label>
+  </div>
+  <!-- Modo foco -->
+  <div style="
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-top:12px;
+  ">
+    <span style="font-size:14px;">Modo foco</span>
+    <label class="ios-switch">
+      <input type="checkbox" id="toggleModoFoco">
       <span class="slider"></span>
     </label>
   </div>

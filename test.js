@@ -194,6 +194,8 @@ let cronometroPausado = false;
 
 let preguntasEnBlanco = [];
 let testEnCurso = false;
+let modoFocoActivo = false;
+let indicePreguntaActual = 0;
 
 function actualizarBarraProgreso() {
   const barra = document.getElementById("barraProgresoInterna");
@@ -582,16 +584,18 @@ function crearBloquePregunta(p, i) {
       <label>
         <input type="radio" name="p${i}" value="${idx}"
           onclick="toggleRadioPregunta(${i}, ${idx}, this)"
-          onchange="autoGuardarProgreso(); actualizarBarraProgreso(); actualizarPanelLateral();">
+          onchange="autoGuardarProgreso(); actualizarBarraProgreso();">
         ${String.fromCharCode(97 + idx)}) ${formatearTexto(op)}
       </label><br>
     `).join("")}
 
     <div class="info-tema linea-tema" 
          style="font-size:12px; opacity:0.7; margin-top:6px;">
-      ${(p.tema && p.subtema) ? (p.tema + " · " + p.subtema)
-        : (p.tema ? p.tema
-        : (p.subtema ? p.subtema : ""))}
+      ${(p.tema && p.tema !== "__falladas__" && p.tema !== "Falladas" && p.subtema)
+        ? (p.tema + " · " + p.subtema)
+        : (p.tema && p.tema !== "__falladas__" && p.tema !== "Falladas"
+            ? p.tema
+            : (p.subtema ? p.subtema : ""))}
     </div>
   `;
   return div;
@@ -1330,7 +1334,10 @@ function iniciarTestReal() {
       });
     });
 
+    const previo = JSON.parse(localStorage.getItem("progresoTest") || "{}");
+
     const nuevoProgreso = {
+      ...previo,
       vistas: vistasIds,
       timestamp: Date.now()
     };
@@ -1354,8 +1361,6 @@ function iniciarTestReal() {
   preguntasTest.forEach((p, i) => {
     zonaTest.appendChild(crearBloquePregunta(p, i));
   });
-
-  actualizarPanelLateral();
 
   // Activar botón de panel lateral
   const btnPanel = document.getElementById("togglePanelBtn");
@@ -1394,6 +1399,8 @@ function iniciarTestReal() {
   }
   // Iniciar el cronómetro justo después de pintar preguntas (modo normal)
   iniciarCronometro();
+  // Inicializar modo foco si existe el toggle
+  inicializarModoFoco();
   // Reaplicar visibilidad de tema tras renderizar preguntas
   const toggleTema = document.getElementById("toggleMostrarTema");
   if (toggleTema) {
@@ -2422,8 +2429,6 @@ function toggleMarcaPregunta(index) {
     p.marcada = false;
     desmarcarPreguntaRemoto(p.id);
   }
-
-  actualizarPanelLateral();
 }
 
 function toggleDudosaPregunta(index) {
@@ -2441,7 +2446,6 @@ function toggleDudosaPregunta(index) {
   if (!check) return;
 
   p.dudosa = !!check.checked;
-  actualizarPanelLateral();
 }
 
 function dejarEnBlanco(index) {
@@ -2460,7 +2464,6 @@ function dejarEnBlanco(index) {
 
   autoGuardarProgreso();
   actualizarBarraProgreso();
-  actualizarPanelLateral();
 }
 
 // Nueva función para controlar el comportamiento de los radios de pregunta
@@ -2483,7 +2486,6 @@ function toggleRadioPregunta(index, valor, radioEl) {
 
     autoGuardarProgreso();
     actualizarBarraProgreso();
-    actualizarPanelLateral();
     return;
   }
 
@@ -2492,65 +2494,6 @@ function toggleRadioPregunta(index, valor, radioEl) {
   radioEl.dataset.activo = "true";
 }
 
-function actualizarPanelLateral() {
-  const panel = document.getElementById("panelLateralTest");
-  if (!panel || !preguntasTest) return;
-
-
-  const contestadas = [];
-  const marcadas = [];
-  const dudosas = [];
-  const enBlanco = [];
-
-  const zonaTest = document.getElementById("zonaTest");
-  const bloques = zonaTest ? zonaTest.querySelectorAll(".bloque-pregunta") : [];
-
-  preguntasTest.forEach((p, i) => {
-    const div = bloques[i];
-    const radio = div ? div.querySelector("input[type=radio]:checked") : null;
-
-    if (radio) contestadas.push(i);
-    else enBlanco.push(i);
-
-    if (p.marcada) marcadas.push(i);
-    if (p.dudosa) dudosas.push(i);
-  });
-
-  function renderBloque(titulo, lista, id) {
-    return `
-      <div style="margin-bottom:10px;">
-        <div 
-          style="font-weight:600; margin-bottom:4px; cursor:pointer;"
-          onclick="(function(){
-            const el = document.getElementById('${id}');
-            if (!el) return;
-            el.style.display = el.style.display === 'none' ? 'block' : 'none';
-          })()"
-        >
-          ▸ ${titulo} [${lista.length}]
-        </div>
-        <div id="${id}" style="font-size:12px; max-height:120px; overflow-y:auto; display:none;">
-          ${lista.map(i => `
-            <div style="margin-bottom:6px; cursor:pointer;" onclick="document.querySelectorAll('#zonaTest .bloque-pregunta')[${i}].scrollIntoView({behavior:'smooth'})">
-              ${i + 1}. ${preguntasTest[i].pregunta}
-            </div>
-          `).join("")}
-        </div>
-      </div>
-    `;
-  }
-
-  const panelFiltro = document.getElementById("panelFiltroPreguntas");
-  if (!panelFiltro) return;
-
-  // Limpiar contenido previo para evitar duplicados
-  panelFiltro.innerHTML = `
-    ${renderBloque("Contestadas", contestadas, "panelContestadas")}
-    ${renderBloque("Marcadas", marcadas, "panelMarcadas")}
-    ${renderBloque("Dudosas", dudosas, "panelDudosas")}
-    ${renderBloque("En blanco", enBlanco, "panelBlanco")}
-  `;
-}
 
 // ===== RESET DE PREGUNTAS VISTAS =====
 document.addEventListener("DOMContentLoaded", () => {
@@ -2657,29 +2600,7 @@ window.mostrarPantallaTemas = mostrarPantallaTemas;
 window.mostrarPantallaHistorial = mostrarPantallaHistorial;
 window.iniciarTest = iniciarTest;
 
-function toggleFiltroPreguntas() {
-  const cont = document.getElementById("panelFiltroPreguntas");
-  if (!cont) return;
 
-  if (cont.style.display === "none" || cont.style.display === "") {
-    cont.style.display = "block";
-  } else {
-    cont.style.display = "none";
-  }
-}
-
-window.addEventListener("DOMContentLoaded", () => {
-  const btn = document.getElementById("btnFiltroPreguntas");
-  const cont = document.getElementById("panelFiltroPreguntas");
-
-  if (cont) {
-    cont.style.display = "block"; // empezar desplegado
-  }
-
-  if (btn) {
-    btn.addEventListener("click", toggleFiltroPreguntas);
-  }
-});
 // ===== AJUSTES DE VISUALIZACIÓN (FUENTE Y TEMA) =====
 window.addEventListener("DOMContentLoaded", () => {
 
@@ -2807,6 +2728,94 @@ document.addEventListener("keydown", function (e) {
       if (confirmar && typeof corregirTest === "function") {
         corregirTest();
       }
+    }
+  }
+});
+
+// ===== MODO FOCO =====
+function inicializarModoFoco() {
+  const toggle = document.getElementById("toggleModoFoco");
+  const controles = document.getElementById("controlesModoFoco");
+  const btnPrev = document.getElementById("btnAnteriorPregunta");
+  const btnNext = document.getElementById("btnSiguientePregunta");
+
+  if (!toggle || !controles) return;
+
+  // Reset estado
+  modoFocoActivo = false;
+  indicePreguntaActual = 0;
+  controles.style.display = "none";
+
+  // Asegurar que los controles estén dentro de zonaTest
+  const zonaTest = document.getElementById("zonaTest");
+  if (zonaTest && controles.parentElement !== zonaTest) {
+    zonaTest.appendChild(controles);
+  }
+
+  toggle.onchange = () => {
+    modoFocoActivo = toggle.checked;
+
+    if (!modoFocoActivo) {
+      mostrarTodasLasPreguntas();
+      controles.style.display = "none";
+      return;
+    }
+
+    indicePreguntaActual = 0;
+    controles.style.display = "flex";
+    mostrarSoloPreguntaActual();
+  };
+
+  if (btnPrev) {
+    btnPrev.onclick = () => {
+      if (!modoFocoActivo) return;
+      if (indicePreguntaActual > 0) {
+        indicePreguntaActual--;
+        mostrarSoloPreguntaActual();
+      }
+    };
+  }
+
+  if (btnNext) {
+    btnNext.onclick = () => {
+      if (!modoFocoActivo) return;
+      if (indicePreguntaActual < preguntasTest.length - 1) {
+        indicePreguntaActual++;
+        mostrarSoloPreguntaActual();
+      }
+    };
+  }
+}
+
+function mostrarSoloPreguntaActual() {
+  const bloques = document.querySelectorAll(".bloque-pregunta");
+  bloques.forEach((bloque, i) => {
+    bloque.style.display = (i === indicePreguntaActual) ? "block" : "none";
+  });
+}
+
+function mostrarTodasLasPreguntas() {
+  const bloques = document.querySelectorAll(".bloque-pregunta");
+  bloques.forEach(bloque => {
+    bloque.style.display = "block";
+  });
+}
+
+// Flechas teclado ← → para modo foco
+document.addEventListener("keydown", function (e) {
+  if (!modoFocoActivo || !testEnCurso) return;
+
+  if (e.key === "ArrowRight") {
+    if (indicePreguntaActual < preguntasTest.length - 1) {
+      indicePreguntaActual++;
+      mostrarSoloPreguntaActual();
+    }
+  }
+
+  if (e.key === "ArrowLeft") {
+    if (indicePreguntaActual > 0) {
+      indicePreguntaActual--;
+      mostrarSoloPreguntaActual();
     }
   }
 });

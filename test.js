@@ -2,18 +2,16 @@ async function cargarProgresoRemoto() {
   try {
     if (!window.usuarioActual || !window.db) return null;
 
-    const ref = window.doc(window.db, "usuarios", window.usuarioActual.uid);
+    const ref = window.doc(window.db, "progresos", window.usuarioActual.uid);
     const snap = await window.getDoc(ref);
 
     if (snap.exists()) {
       const data = snap.data();
 
-      if (data.progresoTest) {
-        // Guardar siempre en localStorage
-        localStorage.setItem("progresoTest", JSON.stringify(data.progresoTest));
-        console.log("Progreso remoto cargado y guardado en localStorage");
-        return data.progresoTest;
-      }
+      // Guardar directamente el progreso completo
+      localStorage.setItem("progresoTest", JSON.stringify(data));
+      console.log("Progreso remoto cargado y guardado en localStorage");
+      return data;
     }
   } catch (e) {
     console.error("Error cargando progreso remoto:", e);
@@ -234,25 +232,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
       });
 
-      // Mezclar estado "vista" guardado localmente para no perder progreso
-      try {
-        const bancoLocal = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
-
-        Object.keys(banco).forEach(tema => {
-          if (!Array.isArray(banco[tema])) return;
-          banco[tema].forEach(p => {
-            const localTema = bancoLocal[tema];
-            if (!Array.isArray(localTema)) return;
-
-            const match = localTema.find(lp => (lp.id && lp.id === p.id) || lp.pregunta === p.pregunta);
-            if (match && match.vista) {
-              p.vista = true;
-            }
-          });
-        });
-      } catch (e) {
-        console.warn("No se pudo mezclar estado vista local:", e);
-      }
 
       // Guardar copia local para modo offline
       localStorage.setItem(STORAGE_KEY, JSON.stringify(banco));
@@ -265,6 +244,25 @@ document.addEventListener("DOMContentLoaded", async () => {
     banco = cargarBancoLocal();
   }
 
+
+  // === Aplicar progreso de preguntas vistas desde Firebase/localStorage ===
+  try {
+    const progreso = JSON.parse(localStorage.getItem("progresoTest") || "null");
+    if (progreso && Array.isArray(progreso.vistas)) {
+      const vistasSet = new Set(progreso.vistas);
+
+      Object.keys(banco).forEach(tema => {
+        if (!Array.isArray(banco[tema])) return;
+        banco[tema].forEach(p => {
+          if (p.id && vistasSet.has(p.id)) {
+            p.vista = true;
+          }
+        });
+      });
+    }
+  } catch (e) {
+    console.warn("No se pudieron aplicar las vistas guardadas:", e);
+  }
 
   // ===== CARGAR PREGUNTAS MARCADAS DEL USUARIO =====
   try {
@@ -311,7 +309,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Reanudar test si hay progreso guardado
   try {
     const progreso = JSON.parse(localStorage.getItem("progresoTest") || "null");
-    if (progreso && progreso.configuracion) {
+    if (
+      progreso &&
+      progreso.configuracion &&
+      Array.isArray(progreso.respuestas) &&
+      progreso.respuestas.length > 0
+    ) {
       const continuar = confirm("Hay un test sin terminar. ¿Quieres reanudarlo?");
       if (continuar) {
         ultimaConfiguracionTest = progreso.configuracion;
@@ -562,14 +565,9 @@ function initTest() {
 function crearBloquePregunta(p, i) {
   const div = document.createElement("div");
   div.classList.add("bloque-pregunta");
-  div.style.marginBottom = "15px";
+  div.style.marginBottom = "28px";
 
   div.innerHTML = `
-    <div class="info-tema linea-tema" style="font-size:12px; opacity:0.7; margin-bottom:4px;">
-      ${(p.tema && p.subtema) ? (p.tema + " · " + p.subtema)
-        : (p.tema ? p.tema
-        : (p.subtema ? p.subtema : ""))}
-    </div>
     <strong>${i + 1}. ${formatearTexto(p.pregunta)}</strong>
     <label style="margin-left:10px; font-size:12px;">
       <input type="checkbox" class="marcar-pregunta" data-index="${i}" onchange="toggleMarcaPregunta(${i})" ${p.marcada ? "checked" : ""}>
@@ -588,6 +586,13 @@ function crearBloquePregunta(p, i) {
         ${String.fromCharCode(97 + idx)}) ${formatearTexto(op)}
       </label><br>
     `).join("")}
+
+    <div class="info-tema linea-tema" 
+         style="font-size:12px; opacity:0.7; margin-top:6px;">
+      ${(p.tema && p.subtema) ? (p.tema + " · " + p.subtema)
+        : (p.tema ? p.tema
+        : (p.subtema ? p.subtema : ""))}
+    </div>
   `;
   return div;
 }
@@ -603,10 +608,12 @@ function pintarCheckboxesTemas() {
   contenedor.innerHTML = "";
 
   let temasOrdenados = Object.keys(banco)
-    .filter(t => t !== "__falladas__" && t !== "__marcadas__")
+    .filter(t => t !== "__marcadas__")
     .sort(ordenNatural);
 
-  // Añadir solo el tema especial de preguntas marcadas al final
+  // Asegurar orden de temas especiales al final
+  temasOrdenados = temasOrdenados.filter(t => t !== "__falladas__");
+  temasOrdenados.push("__falladas__");
   temasOrdenados.push("__marcadas__");
 
   temasOrdenados.forEach(tema => {
@@ -616,13 +623,21 @@ function pintarCheckboxesTemas() {
 
     if (tema === "__falladas__") {
       nombreVisible = "📌 Preguntas más falladas";
-      contador = banco["__falladas__"].filter(p => (p.fallada || 0) > 0).length;
+      contador = (banco["__falladas__"] || []).filter(p => (p.fallada || 0) > 0).length;
     } else if (tema === "__marcadas__") {
       nombreVisible = "⭐ Preguntas marcadas";
-      contador = Object.values(banco)
+      const idsUnicos = new Set();
+
+      Object.values(banco)
         .filter(arr => Array.isArray(arr))
         .flat()
-        .filter(p => p.marcada).length;
+        .forEach(p => {
+          if (p.marcada && p.id) {
+            idsUnicos.add(p.id);
+          }
+        });
+
+      contador = idsUnicos.size;
     } else {
       contador = banco[tema].length;
       nuevas = banco[tema].filter(p => !p.vista).length;
@@ -907,6 +922,7 @@ function iniciarTestReal() {
   const pantallaTemas = document.getElementById("pantallaTemas");
   if (pantallaTemas) pantallaTemas.style.display = "none";
   testEnCurso = true;
+  autoGuardarProgreso();
   // Limpieza defensiva de texto residual / debug
   document.querySelectorAll(".debug, .texto-debug").forEach(e => e.remove());
 
@@ -981,14 +997,21 @@ function iniciarTestReal() {
 
   // === MODO PREGUNTAS MARCADAS ===
   if (temasSeleccionados.some(t => t.tema === "__marcadas__")) {
-    let marcadas = [];
+    const mapaMarcadas = new Map();
 
     Object.keys(banco).forEach(tema => {
       if (!Array.isArray(banco[tema])) return;
       banco[tema].forEach(p => {
-        if (p.marcada) marcadas.push(p);
+        if (p.marcada) {
+          const clave = p.id || p.pregunta;
+          if (!mapaMarcadas.has(clave)) {
+            mapaMarcadas.set(clave, p);
+          }
+        }
       });
     });
+
+    let marcadas = Array.from(mapaMarcadas.values());
 
     if (marcadas.length === 0) {
       alert("No tienes preguntas marcadas todavía");
@@ -1295,6 +1318,31 @@ function iniciarTestReal() {
       window.actualizarVista(p.id, true);
     }
   });
+
+  // === Persistir vistas en progresoTest ===
+  try {
+    const vistasIds = [];
+
+    Object.keys(banco).forEach(t => {
+      if (!Array.isArray(banco[t])) return;
+      banco[t].forEach(p => {
+        if (p.vista && p.id) vistasIds.push(p.id);
+      });
+    });
+
+    const nuevoProgreso = {
+      vistas: vistasIds,
+      timestamp: Date.now()
+    };
+
+    localStorage.setItem("progresoTest", JSON.stringify(nuevoProgreso));
+
+    if (window.guardarProgresoRemoto) {
+      window.guardarProgresoRemoto(nuevoProgreso);
+    }
+  } catch (e) {
+    console.warn("No se pudieron persistir las vistas:", e);
+  }
 
   // Guardar banco actualizado
   try {
@@ -2292,21 +2340,19 @@ function autoGuardarProgreso() {
     });
   });
 
-  localStorage.setItem(
-    "progresoTest",
-    JSON.stringify({
-      configuracion: ultimaConfiguracionTest,
-      respuestas: respuestas,
-      timestamp: Date.now()
-    })
-  );
-  // Sincronización remota si está disponible
+  const previo = JSON.parse(localStorage.getItem("progresoTest") || "{}");
+
+  const nuevoProgreso = {
+    ...previo,
+    configuracion: ultimaConfiguracionTest,
+    respuestas: respuestas,
+    timestamp: Date.now()
+  };
+
+  localStorage.setItem("progresoTest", JSON.stringify(nuevoProgreso));
+
   if (window.guardarProgresoRemoto) {
-    window.guardarProgresoRemoto({
-      configuracion: ultimaConfiguracionTest,
-      respuestas: respuestas,
-      timestamp: Date.now()
-    });
+    window.guardarProgresoRemoto(nuevoProgreso);
   }
 }
 

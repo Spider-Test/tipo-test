@@ -64,6 +64,7 @@ async function inicializarAuth() {
 }
 
 inicializarAuth();
+sincronizarProgresoInicial();
 
 // Esperar a que la autenticación esté lista y cargar progreso remoto
 async function sincronizarProgresoInicial() {
@@ -213,7 +214,7 @@ window.guardarProgresoRemoto = async function (progreso) {
     if (!usuarioActual) return;
 
     const ref = doc(db, "progresos", usuarioActual.uid);
-    await setDoc(ref, progreso);
+    await setDoc(ref, progreso, { merge: true });
     console.log("Progreso guardado en Firebase");
   } catch (err) {
     console.error("Error guardando progreso remoto", err);

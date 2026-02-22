@@ -157,7 +157,7 @@ async function initEditor() {
 }
 
 /* ====== CREAR / EDITAR PREGUNTA ====== */
-function guardarPregunta() {
+async function guardarPregunta() {
   const temaInput = document.getElementById("tema");
   const temaSelect = document.getElementById("temaExistente");
   const temaInputValor = temaInput.value.trim();
@@ -272,32 +272,27 @@ function guardarPregunta() {
 
   // Recargar selects
   cargarTemasVista();
-  cargarTemasExistentes();
+  await cargarTemasExistentes();
   cargarSelectEliminar();
 
-  // Restaurar selección tras repintado completo
-  setTimeout(() => {
-    const selectTema = document.getElementById("temaExistente");
-    const selectSubtema = document.getElementById("subtemaExistente");
+  // Restaurar selección después de que cargarTemasExistentes termine
+  const selectTema = document.getElementById("temaExistente");
+  const selectSubtema = document.getElementById("subtemaExistente");
 
-    if (selectTema && temaActual) {
-      selectTema.value = temaActual;
-      if (typeof controlarInputTema === "function") {
-        controlarInputTema();
-      }
+  if (selectTema && temaActual) {
+    selectTema.value = temaActual;
+    if (typeof controlarInputTema === "function") {
+      controlarInputTema();
     }
+  }
 
-    if (typeof cargarSubtemasPorTema === "function") {
-      cargarSubtemasPorTema();
-    }
+  if (typeof cargarSubtemasPorTema === "function") {
+    await cargarSubtemasPorTema();
+  }
 
-    setTimeout(() => {
-      if (selectSubtema && subtemaActual) {
-        selectSubtema.value = subtemaActual;
-      }
-    }, 50);
-
-  }, 100);
+  if (selectSubtema && subtemaActual) {
+    selectSubtema.value = subtemaActual;
+  }
 }
 
 /* ====== VISTA AVANZADA ====== */

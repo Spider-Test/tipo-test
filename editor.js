@@ -264,32 +264,40 @@ function guardarPregunta() {
     window.parent.postMessage({ type: "BANCO_ACTUALIZADO" }, "*");
   }
 
+  // Guardar selección actual antes de refrescar selects
+  const temaActual = temaSeleccionado;
+  const subtemaActual = subtemaSeleccionado;
+
   limpiarFormulario();
+
+  // Recargar selects
   cargarTemasVista();
   cargarTemasExistentes();
   cargarSelectEliminar();
 
-  // Restaurar tema y subtema seleccionados tras guardar
+  // Restaurar selección tras repintado completo
   setTimeout(() => {
     const selectTema = document.getElementById("temaExistente");
-    if (selectTema && temaSeleccionado) {
-      selectTema.value = temaSeleccionado;
+    const selectSubtema = document.getElementById("subtemaExistente");
+
+    if (selectTema && temaActual) {
+      selectTema.value = temaActual;
+      if (typeof controlarInputTema === "function") {
+        controlarInputTema();
+      }
     }
 
-    // Cargar subtemas del tema restaurado
     if (typeof cargarSubtemasPorTema === "function") {
       cargarSubtemasPorTema();
     }
 
-    // Restaurar subtema tras cargar los subtemas
     setTimeout(() => {
-      const selectSubtema = document.getElementById("subtemaExistente");
-      if (selectSubtema && subtemaSeleccionado) {
-        selectSubtema.value = subtemaSeleccionado;
+      if (selectSubtema && subtemaActual) {
+        selectSubtema.value = subtemaActual;
       }
-    }, 200);
+    }, 50);
 
-  }, 200);
+  }, 100);
 }
 
 /* ====== VISTA AVANZADA ====== */
